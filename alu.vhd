@@ -9,7 +9,7 @@
 -- Target Devices: 
 -- Tool versions: 
 -- Description: 
---
+-- 32 bit ALU that supports several operations including add, su
 -- Dependencies: 
 --
 -- Revision: 
@@ -17,31 +17,24 @@
 -- Additional Comments:
 -- 
 -- opcode mappings
---  add   0110
---  and   1000
---  comp  1100
---  sll   0000
---  sllv  0001
---  nor   1011
---  or    1001
---  sra   0100
---  srav  0101
---  srl   0010
---  srlv  0011
---  xor   1010
---  sub   0111
+--  add  => 0110
+--  and  => 1000
+--  comp => 1100
+--  sll  => 0000
+--  sllv => 0001
+--  nor  => 1011
+--  or   => 1001
+--  sra  => 0100
+--  srav => 0101
+--  srl  => 0010
+--  srlv => 0011
+--  xor  => 1010
+--  sub  => 0111
 ----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use ieee.numeric_std.all;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity alu is
     port

@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------
 -- Company: 
--- Engineer:
+-- Engineer: Reed Foster
 --
 -- Create Date:   09:40:32 02/26/2017
 -- Design Name:   
--- Module Name:   C:/Users/Reed2/Desktop/XilinxPrograms/r32/alu_tb.vhd
+-- Module Name:   alu_tb.vhd
 -- Project Name:  r32
 -- Target Device:  
 -- Tool versions:  
@@ -27,10 +27,6 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---USE ieee.numeric_std.ALL;
  
 ENTITY alu_tb IS
 END alu_tb;
