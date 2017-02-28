@@ -67,7 +67,6 @@ begin
          );
    end generate;
    
-   
    b_tmp <= (bits - 1 downto 0 => mode) xor b;
    
    carry_internal(0) <= mode;
