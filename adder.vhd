@@ -1,20 +1,20 @@
 ----------------------------------------------------------------------------------
--- Company: 
+-- Company:
 -- Engineer: Reed Foster
--- 
--- Create Date:    18:46:02 02/20/2017 
--- Design Name: 
--- Module Name:    adder - structural 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
+--
+-- Create Date:    18:46:02 02/20/2017
+-- Design Name:
+-- Module Name:    adder - structural
+-- Project Name:
+-- Target Devices:
+-- Tool versions:
 -- Description: Generic adder with a "mode" input to select addition or subtraction
 --
--- Dependencies: 
+-- Dependencies:
 --
--- Revision: 
+-- Revision:
 -- Revision 0.01 - File Created
--- Additional Comments: 
+-- Additional Comments:
 --
 ----------------------------------------------------------------------------------
 library ieee;
@@ -66,6 +66,7 @@ begin
             c_out => carry_internal(n + 1)
          );
    end generate;
+   
    
    b_tmp <= (bits - 1 downto 0 => mode) xor b;
    
