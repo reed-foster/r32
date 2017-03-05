@@ -35,14 +35,19 @@ entity cache is
       data_in  : in  std_logic_vector (31 downto 0);
       data_out : out std_logic_vector (31 downto 0);
       address  : in  std_logic_vector (31 downto 0);
-      hit      : out std_logic
+      hit      : out std_logic;
+      
+      clk      : in  std_logic;
+      proc_wrt : in  std_logic;
+      proc_en  : in  std_logic
    );
 end cache;
 
 architecture behavioral of cache is
-   type ram_type is array (0 to 255) of 
+   type line_type is array (0 to 255) of 
       std_logic_vector(31 downto 0);
-   signal ram: ram_type;
+   type cache_type is array (0 to 31) of
+      line_type;
 begin
 
 
