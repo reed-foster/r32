@@ -44,8 +44,11 @@ entity cache is
 end cache;
 
 architecture behavioral of cache is
-   type line_type is array (0 to 255) of 
-      std_logic_vector(31 downto 0);
+   type line_data_type is array (0 to 1024) of 
+      std_logic_vector(7 downto 0);
+   type line_type is record
+      tag  : std_logic_vector(21 downto 0);
+      data : line_data_type;
    type cache_type is array (0 to 31) of
       line_type;
 begin
