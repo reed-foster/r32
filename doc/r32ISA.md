@@ -63,7 +63,7 @@
 <h1>Coprocessor 0 Instructions</h1>
 ---
 <table>
-<tr><td><b>Operation</b></td><td><b>Semantics</b></td><td><b>Notes</b></td></tr>
+<tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>lwc0</td><td>CP0[rt] ← MEM[base + imm]</td><td>imm is sign-extended</td></tr>
 <tr><td>swc0</td><td>MEM[base + imm] ← CP0[rt]</td><td>imm is sign-extended</td></tr>
 <tr><td>mtc0</td><td>CP0[rt] ← rs</td><td></td></tr>
@@ -73,7 +73,7 @@
 <h1>Coprocessor 1 (FPU) Instructions</h1>
 ---
 <table>
-<tr><td><b>Operation</b></td><td><b>Semantics</b></td><td><b>Notes</b></td></tr>
+<tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>lwc1</td><td>FPU[ft] ← MEM[base + imm]</td><td>imm is sign-extended</td></tr>
 <tr><td>mtc1</td><td>FPU[ft] ← rs</td><td></td></tr>
 <tr><td>mfc1</td><td>rt ← FPU[fs]</td><td></td></tr>
