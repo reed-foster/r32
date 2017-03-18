@@ -1,7 +1,7 @@
-#Processor Instructions
+<h1>Processor Instructions</h1>
 ---
 <table>
-<tr><td><b>Operation</b></td><td><b>Semantics</b></td><td><b>Notes</b></td></tr>
+<tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>add</td><td>rd ← rs + rt</td><td></td></tr>
 <tr><td>addi</td><td>rt ← rs + imm</td><td>imm is sign-extended</td></tr>
 <tr><td>addiu</td><td>rt ← rs + imm</td><td>no overflow exception</td></tr>
@@ -27,6 +27,7 @@
 <tr><td>nor</td><td>rd ← ~(rs | rt)</td><td></td></tr>
 <tr><td>or</td><td>rd ← rs | rt</td><td></td></tr>
 <tr><td>ori</td><td>rt ← rs | imm</td><td>imm is zero-extended</td></tr>
+<tr><td>pre</td><td></td><td>fetch page containing rs + imm</td></tr>
 <tr><td>sb</td><td>MEM[rs + imm] ← rt(7:0)</td><td>imm is sign-extended</td></tr>
 <tr><td>sh</td><td>MEM[rs + imm + 1] ← rt(7:0); MEM[rs + imm] ← rt(15:8)</td><td></td></tr>
 <tr><td>sll</td><td>rd ← rt &lt;&lt; sa</td><td></td></tr>
@@ -59,7 +60,7 @@
 <tr><td>xori</td><td>rd ← rs ⊕ imm</td><td>imm is zero-extended</td></tr>
 </table>
 
-#Coprocessor 0 Instructions
+<h1>Coprocessor 0 Instructions</h1>
 ---
 <table>
 <tr><td><b>Operation</b></td><td><b>Semantics</b></td><td><b>Notes</b></td></tr>
@@ -69,7 +70,7 @@
 <tr><td>mfc0</td><td>rt ← CP0[rs]</td><td></td></tr>
 </table>
 
-#Coprocessor 1 (FPU) Instructions
+<h1>Coprocessor 1 (FPU) Instructions</h1>
 ---
 <table>
 <tr><td><b>Operation</b></td><td><b>Semantics</b></td><td><b>Notes</b></td></tr>
