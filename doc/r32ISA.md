@@ -1,5 +1,5 @@
 <h1>Processor Instructions</h1>
----
+<hr/>
 <table>
 <tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>add</td><td>rd ← rs + rt</td><td></td></tr>
@@ -61,7 +61,7 @@
 </table>
 
 <h1>Coprocessor 0 Instructions</h1>
----
+<hr/>
 <table>
 <tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>lwc0</td><td>CP0[rt] ← MEM[base + imm]</td><td>imm is sign-extended</td></tr>
@@ -71,7 +71,7 @@
 </table>
 
 <h1>Coprocessor 1 (FPU) Instructions</h1>
----
+<hr/>
 <table>
 <tr><td><b>Mnemonic</b></td><td><b>Operation</b></td><td><b>Notes</b></td></tr>
 <tr><td>lwc1</td><td>FPU[ft] ← MEM[base + imm]</td><td>imm is sign-extended</td></tr>
