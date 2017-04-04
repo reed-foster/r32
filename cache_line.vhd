@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: Reed Foster
 -- 
--- Create Date:    09:24:25 02/28/2017 
+-- Create Date:    16:54:25 04/02/2017 
 -- Design Name: 
--- Module Name:    cache - behavioral 
+-- Module Name:    line_cache - behavioral 
 -- Project Name: 
 -- Target Devices: 
 -- Tool versions: 
@@ -20,7 +20,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity cache is
+entity cache_line is
    port
    (
       data_in  : in  std_logic_vector (31 downto 0);
@@ -32,7 +32,7 @@ entity cache is
       proc_wrt : in  std_logic;
       proc_en  : in  std_logic
    );
-end cache;
+end cache_line;
 
 architecture behavioral of cache is
    type line_data_type is array (0 to 1024) of 
@@ -40,9 +40,7 @@ architecture behavioral of cache is
    type line_type is record
       tag  : std_logic_vector(21 downto 0);
       data : line_data_type;
-   type cache_type is array (0 to 31) of
-      line_type;
-
+   
 begin
 
 
