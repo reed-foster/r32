@@ -41,11 +41,10 @@ entity sdram is
       cke         : out std_logic; --clock enable (HIGH) disable (LOW)
       
       --data I/O mask: controls output buffers in read mode and masks input data in write mode
-      udqm        : out std_logic; --upper byte mask
-      ldqm        : out std_logic; --lower byte mask
+      udqm  : out std_logic; --upper byte mask
+      ldqm  : out std_logic; --lower byte mask
       
       --enable/disable signals
-      
       --control signals: ba0, ba1, cs, ras#, cas#, and we#
       ba       : out std_logic_vector (1 downto 0); --bank activate "00" => A, "01" => B, etc.
       sdram_cs : out std_logic; --enables/disables command decoder
@@ -54,8 +53,8 @@ entity sdram is
       we       : out std_logic; --write enable
       
       --address/data
-      a  : out   std_logic_vector (12 downto 0); --address inputs
-      d  : inout std_logic_vector (15 downto 0)  --data input and output
+      ram_addr  : out   std_logic_vector (12 downto 0); --address inputs
+      ram_data  : inout std_logic_vector (15 downto 0)  --data input and output
    );
 end sdram;
 
