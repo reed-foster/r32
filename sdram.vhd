@@ -53,12 +53,15 @@ entity sdram is
       we       : out std_logic; --write enable
       
       --address/data
-      ram_addr  : out   std_logic_vector (12 downto 0); --address inputs
-      ram_data  : inout std_logic_vector (15 downto 0)  --data input and output
+      ram_addr     : out std_logic_vector (12 downto 0); --address inputs
+      ram_data_in  : in  std_logic_vector (15 downto 0); --data input
+      ram_data_out : out std_logic_vector (15 downto 0)  --data output
    );
 end sdram;
 
 architecture behavioral of sdram is
+
+   type fsm_states is (idle, refresh, rowactivate, read, write);
 
 begin
 
