@@ -4,7 +4,7 @@
 -- 
 -- Create Date:    16:54:25 04/02/2017 
 -- Design Name: 
--- Module Name:    line_cache - behavioral 
+-- Module Name:    cache_line - behavioral 
 -- Project Name: 
 -- Target Devices: 
 -- Tool versions: 

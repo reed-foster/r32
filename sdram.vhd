@@ -9,7 +9,7 @@
 -- Target Devices: 
 -- Tool versions: 
 -- Description: 
--- SRAM interface for AS4C16M16S-6TCN SDRAM
+-- SRAM-like interface for AS4C16M16S-6TCN SDRAM
 -- Dependencies: 
 --
 -- Revision: 
@@ -26,7 +26,7 @@ use ieee.numeric_std.all;
 entity sdram is
     generic
     (
-        CAS_latency : integer range 2 to 3
+        CAS_latency : integer range 2 to 3 := 2
     );
     port
     (
@@ -39,6 +39,7 @@ entity sdram is
         addr        : in  std_logic_vector (23 downto 0);
         read_ready  : out std_logic;
         write_ready : out std_logic;
+        addr_ready  : out std_logic_vector (23 downto 0);
 
 
         --SDRAM Interface
@@ -72,69 +73,131 @@ architecture behavioral of sdram is
    signal currentstate : fsm_states := init;
 
    --commands in the form cs#, ras#, cas#, we#
-    constant cmd_nop     : std_logic_vector(3 downto 0) := "0111";
-    constant cmd_read    : std_logic_vector(3 downto 0) := "0101"; --A10 must be low
-    constant cmd_write   : std_logic_vector(3 downto 0) := "0100";
-    constant cmd_bnkact  : std_logic_vector(3 downto 0) := "0011";
-    constant cmd_prechrg : std_logic_vector(3 downto 0) := "0010"; --A10 must be high
-    constant cmd_refresh : std_logic_vector(3 downto 0) := "0001";
-    constant cmd_setmode : std_logic_vector(3 downto 0) := "0000";
-    constant cmd_hltbrst : std_logic_vector(3 downto 0) := "0110";
+    constant cmd_nop     : std_logic_vector (3 downto 0) := "0111";
+    constant cmd_read    : std_logic_vector (3 downto 0) := "0101"; --A10 must be low
+    constant cmd_write   : std_logic_vector (3 downto 0) := "0100";
+    constant cmd_bnkact  : std_logic_vector (3 downto 0) := "0011";
+    constant cmd_prechrg : std_logic_vector (3 downto 0) := "0010"; --A10 must be high
+    constant cmd_refresh : std_logic_vector (3 downto 0) := "0001";
+    constant cmd_setmode : std_logic_vector (3 downto 0) := "0000";
+    constant cmd_hltbrst : std_logic_vector (3 downto 0) := "0110";
 
     constant mode_reg : std_logic_vector(12 downto 0) := 
     --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
-    "0" & "00" & ("010" when CAS_latency = 2 else "011") & "0" & "111";
+    '0' & "00" & ("010" when CAS_latency = 2 else "011") & '0' & "111";
 
-    signal statetimer : std_logic_vector(9 downto 0) := x"00000";
+    signal statetimer : std_logic_vector(9 downto 0) := "0000000000";
 
-    signal cmd : std_logic_vector(3 downto 0);
+    --timing constants
+    constant init_prechrg  : std_logic_vector (9 downto 0) := "0000000001";
+    constant init_setmode  : std_logic_vector (9 downto 0) := "0000000100";
+    constant init_ref0     : std_logic_vector (9 downto 0) := "0000000110";
+    constant init_ref1     : std_logic_vector (9 downto 0) := "0000001101";
+    constant init_exit     : std_logic_vector (9 downto 0) := "0000010001";
+
+    constant ref_refresh   : std_logic_vector (9 downto 0) := "0000000000";
+    constant ref_exit      : std_logic_vector (9 downto 0) := "0000001001";
+
+    constant wrt_write     : std_logic_vector (9 downto 0) := "0000000000";
+    constant wrt_hltbrst   : std_logic_vector (9 downto 0) := "";
+    constant wrt_prechrg   : std_logic_vector (9 downto 0) := "";
+
+    constant rd_read       : std_logic_vector (9 downto 0) := "0000000000";
+    constant rd_data_ready : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency));
+    constant rd_hltbrst    : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency) + 510);
+    constant rd_prechrg    : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency) + 511);
+
+    signal cmd : std_logic_vector (3 downto 0);
+
+    component sdram_request_queue is
+        generic
+        (
+            depth : integer range 1 to 16 := 8
+        );
+        port
+        (
+            read_req      : in  std_logic;
+            write_req     : in  std_logic;
+            clock         : in  std_logic;
+            address       : in  std_logic_vector (23 downto 0);
+            get_next      : in  std_logic;
+            next_req_addr : out std_logic_vector (23 downto 0);
+            next_req_type : out std_logic; --1 for write, 0 for read
+            empty         : out std_logic
+        );
+    end component;
 
 begin
+    
+    request_queue : sdram_request_queue
+        generic map (depth => 8)
+        port map
+        (
+            read_req => read_req,
+            write_req => write_req,
+            clock => clock,
+            address => address,
+            get_next =>,
+            next_req_addr =>,
+            next_req_type =>
+            empty
+        );
 
     fsm : process(clock, currentstate) is
+        variable statetimer_next : std_logic_vector (9 downto 0);
     begin
         if rising_edge(clock)
             case currentstate is
+                statetimer_next := std_logic_vector(unsigned(statetimer) + 1);
                 when init =>
-                    if initctr = "10001"
+                    if statetimer = init_exit
                         currentstate <= idle;
-                        initctr <= "00000"
-                    else
-                        initctr <= std_logic_vector(unsigned(initctr) + 1);
+                        statetimer_next := (9 downto 0) => '0';
                     end if;
                 when ref =>
-                    if refctr = "1001"
+                    if statetimer = ref_exit
                         currentstate <= idle;
-                        refctr <= "0000";
-                    else
-                        refctr <= std_logic_vector(unsigned(refctr) + 1);
+                        statetimer_next := (9 downto 0) => '0';
                     end if;
                 when wrt =>
-                    if wrtctr = "1000000001"
+                    if statetimer = wrt_prechrg
                         currentstate <= idle;
-                        wrtctr <= "0000000000";
-                    else
-                        wrtctr <= std_logic_vector(unsigned(wrtctr) + 1);
+                        statetimer_next := (9 downto 0) => '0';
                     end if;
                 when rd =>
-                    if rdctr = "1000000001"
+                    if statetimer = rd_prechrg
+                        read_ready <= '0';
                         currentstate <= idle;
-                        rdctr <= "0000000000";
-                    else
-                        rdctr <= std_logic_vector(unsigned(rdctr) + 1);
+                        statetimer_next := (9 downto 0) => '0';
+                    elsif statetimer = rd_data_ready
+                        read_ready <= '1';
                     end if;
+                when idle =>
+
+                end
             end case;
         end if;
     end process fsm;
 
     with currentstate select
-    cmd <=  (cmd_prechrg when initctr = "00001" else
-             cmd_setmode when initctr = "00100" else
-             cmd_autorefresh when (initctr = "00110" or initctr = "01101")) when init,
-            () when idle,
-            () when rd,
-            () when wrt,
-            () when ref,
+    cmd <=  (cmd_prechrg when statetimer = init_prechrg else
+             cmd_setmode when statetimer = init_setmode else
+             cmd_autorefresh when (statetimer = initref0 or statetimer = initref1) else
+             cmd_nop) when init,
+
+            (cmd_nop) when idle,
+
+            (cmd_read when statetimer = rd_read else
+             cmd_hltbrst when statetimer = rd_hltbrst else
+             cmd_prechrg when statetimer = rd_prechrg else
+             cmd_nop) when rd,
+
+            (cmd_write when statetimer = wrt_write else
+             cmd_hltbrst when statetimer = wrt_hltbrst else
+             cmd_prechrg when statetimer = wrt_prechrg else
+             cmd_nop) when wrt,
+
+            (cmd_refresh when statetimer = ref_refresh) when ref,
             cmd_nop when others;
 
     sdram_cs <= cmd(3);
