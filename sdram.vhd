@@ -24,6 +24,10 @@ use ieee.numeric_std.all;
 
 
 entity sdram is
+    generic
+    (
+        CAS_latency : integer range 2 to 3
+    );
     port
     (
         --Processor Interface
@@ -66,7 +70,6 @@ architecture behavioral of sdram is
    type fsm_states is (init, idle, rd, wrt, ref);
 
    signal currentstate : fsm_states := init;
-   signal nextstate : fsm_states;
 
    --commands in the form cs#, ras#, cas#, we#
     constant cmd_nop     : std_logic_vector(3 downto 0) := "0111";
@@ -78,40 +81,66 @@ architecture behavioral of sdram is
     constant cmd_setmode : std_logic_vector(3 downto 0) := "0000";
     constant cmd_hltbrst : std_logic_vector(3 downto 0) := "0110";
 
-    signal command : std_logic_vector(20 downto 0);
-    signal dqm     : std_logic_vector(1 downto 0);
-    signal bank    : std_logic_vector(1 downto 0);
-    signal addr    : std_logic_vector(12 downto 0);
-    signal cmdlet  : std_logic_vector(3 downto 0);
+    constant mode_reg : std_logic_vector(12 downto 0) := 
+    --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
+    "0" & "00" & ("010" when CAS_latency = 2 else "011") & "0" & "111";
+
+    signal statetimer : std_logic_vector(9 downto 0) := x"00000";
+
+    signal cmd : std_logic_vector(3 downto 0);
 
 begin
 
-    sync_proc : process(clock, nextstate, ld, str)
+    fsm : process(clock, currentstate) is
     begin
-        case currentstate is
-            when init =>
+        if rising_edge(clock)
+            case currentstate is
+                when init =>
+                    if initctr = "10001"
+                        currentstate <= idle;
+                        initctr <= "00000"
+                    else
+                        initctr <= std_logic_vector(unsigned(initctr) + 1);
+                    end if;
+                when ref =>
+                    if refctr = "1001"
+                        currentstate <= idle;
+                        refctr <= "0000";
+                    else
+                        refctr <= std_logic_vector(unsigned(refctr) + 1);
+                    end if;
+                when wrt =>
+                    if wrtctr = "1000000001"
+                        currentstate <= idle;
+                        wrtctr <= "0000000000";
+                    else
+                        wrtctr <= std_logic_vector(unsigned(wrtctr) + 1);
+                    end if;
+                when rd =>
+                    if rdctr = "1000000001"
+                        currentstate <= idle;
+                        rdctr <= "0000000000";
+                    else
+                        rdctr <= std_logic_vector(unsigned(rdctr) + 1);
+                    end if;
+            end case;
+        end if;
+    end process fsm;
 
-            when idle =>
+    with currentstate select
+    cmd <=  (cmd_prechrg when initctr = "00001" else
+             cmd_setmode when initctr = "00100" else
+             cmd_autorefresh when (initctr = "00110" or initctr = "01101")) when init,
+            () when idle,
+            () when rd,
+            () when wrt,
+            () when ref,
+            cmd_nop when others;
 
-            when rd =>
-
-            when wrt =>
-
-            when ref =>
-
-        end case;
-    end process sync_proc;
-
-    command <= dqm & bank & addr & cmd;
-
-    udqm <= command(20);
-    ldqm <= command(19);
-    ba <= command(18 downto 17);
-    ram_addr <= command(16 downto 4);
-    sdram_cs <= command(3);
-    ras <= command(2);
-    cas <= command(1);
-    we <= command(0);
+    sdram_cs <= cmd(3);
+    ras <= cmd(2);
+    cas <= cmd(1);
+    we <= cmd(0);
 
 end behavioral;
 
