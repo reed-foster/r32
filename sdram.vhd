@@ -81,7 +81,7 @@ architecture behavioral of sdram is
     --commands in the form cs#, ras#, cas#, we#
     constant cmd_nop     : std_logic_vector (3 downto 0) := "0111";
     constant cmd_read    : std_logic_vector (3 downto 0) := "0101"; --A10 must be low
-    constant cmd_write   : std_logic_vector (3 downto 0) := "0100";
+    constant cmd_write   : std_logic_vector (3 downto 0) := "0100"; --A10 must be low
     constant cmd_bnkact  : std_logic_vector (3 downto 0) := "0011";
     constant cmd_prechrg : std_logic_vector (3 downto 0) := "0010"; --A10 must be high
     constant cmd_refresh : std_logic_vector (3 downto 0) := "0001";
@@ -113,7 +113,7 @@ architecture behavioral of sdram is
     signal init_cmd, rd_cmd, wrt_cmd, ref_cmd : std_logic_vector (3 downto 0);
     signal cmd : std_logic_vector (3 downto 0);
     
-    signal get_next : std_logic;
+    signal get_next : std_logic := '0';
     signal next_req_addr : std_logic_vector (23 downto 0);
     signal next_req_type : std_logic;
     signal req_queue_empty : std_logic;
@@ -206,6 +206,7 @@ begin
                         end if;
                     end if;
             end case;
+            statetimer <= statetimer_next;
         end if;
     end process fsm;
     

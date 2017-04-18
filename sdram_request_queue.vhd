@@ -46,13 +46,13 @@ architecture behavioral of sdram_request_queue is
 
     signal buffdata : queue := (0 to depth - 1 => (24 downto 0 => '0'));
 
-    signal enqueue_ptr : integer;
-    signal dequeue_ptr : integer;
+    signal enqueue_ptr : integer := 0;
+    signal dequeue_ptr : integer := 0;
     signal empty_tmp : std_logic;
     signal full_tmp : std_logic;
 
-    signal enqueue_ptr_ovr : std_logic;
-    signal dequeue_ptr_ovr : std_logic;
+    signal enqueue_ptr_ovr : std_logic := '0';
+    signal dequeue_ptr_ovr : std_logic := '0';
 begin
     
     update_ptrs : process (clock, read_req, write_req, address, empty_tmp, full_tmp) is
@@ -61,7 +61,7 @@ begin
             if read_req = '1' and full_tmp /= '1' then
                 buffdata(enqueue_ptr) <= '0' & address;
                 enqueue_ptr <= enqueue_ptr + 1;
-                if enqueue_ptr  = depth then
+                if enqueue_ptr >= depth then
                     enqueue_ptr <= 0;
                     enqueue_ptr_ovr <= not enqueue_ptr_ovr;
                 end if;
@@ -69,14 +69,14 @@ begin
             if write_req = '1' and full_tmp /= '1' then
                 buffdata(enqueue_ptr) <= '1' & address;
                 enqueue_ptr <= enqueue_ptr + 1;
-                if enqueue_ptr  = depth then
+                if enqueue_ptr >= depth then
                     enqueue_ptr <= 0;
                     enqueue_ptr_ovr <= not enqueue_ptr_ovr;
                 end if;
             end if;
             if get_next = '1' and empty_tmp /= '1' then
                 dequeue_ptr <= dequeue_ptr + 1;
-                if dequeue_ptr = depth then
+                if dequeue_ptr >= depth then
                     dequeue_ptr <= 0;
                     dequeue_ptr_ovr <= not dequeue_ptr_ovr;
                 end if;
