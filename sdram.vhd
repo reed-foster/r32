@@ -26,7 +26,7 @@ use ieee.numeric_std.all;
 entity sdram is
     generic
     (
-        CAS_latency : integer range 2 to 3 := 2
+        CAS_latency : integer range 2 to 3 := 3
     );
     port
     (
@@ -67,12 +67,18 @@ entity sdram is
 end sdram;
 
 architecture behavioral of sdram is
-   
-   type fsm_states is (init, idle, rd, wrt, ref);
+    
+    type fsm_states is (init, idle, rd, wrt, ref);
 
-   signal currentstate : fsm_states := init;
-
-   --commands in the form cs#, ras#, cas#, we#
+    signal currentstate : fsm_states := init;
+    
+    signal statetimer : std_logic_vector (9 downto 0) := "0000000000";
+    
+    --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
+    constant mode_reg_cas2 : std_logic_vector (12 downto 0) := "000" & '0' & "00" & "010" & '0' & "111";
+    constant mode_reg_cas3 : std_logic_vector (12 downto 0) := "000" & '0' & "00" & "011" & '0' & "111";
+    
+    --commands in the form cs#, ras#, cas#, we#
     constant cmd_nop     : std_logic_vector (3 downto 0) := "0111";
     constant cmd_read    : std_logic_vector (3 downto 0) := "0101"; --A10 must be low
     constant cmd_write   : std_logic_vector (3 downto 0) := "0100";
@@ -81,12 +87,6 @@ architecture behavioral of sdram is
     constant cmd_refresh : std_logic_vector (3 downto 0) := "0001";
     constant cmd_setmode : std_logic_vector (3 downto 0) := "0000";
     constant cmd_hltbrst : std_logic_vector (3 downto 0) := "0110";
-
-    constant mode_reg : std_logic_vector(12 downto 0) := 
-    --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
-    '0' & "00" & ("010" when CAS_latency = 2 else "011") & '0' & "111";
-
-    signal statetimer : std_logic_vector(9 downto 0) := "0000000000";
 
     --timing constants
     constant init_prechrg  : std_logic_vector (9 downto 0) := "0000000001";
@@ -99,15 +99,24 @@ architecture behavioral of sdram is
     constant ref_exit      : std_logic_vector (9 downto 0) := "0000001001";
 
     constant wrt_write     : std_logic_vector (9 downto 0) := "0000000000";
-    constant wrt_hltbrst   : std_logic_vector (9 downto 0) := "";
-    constant wrt_prechrg   : std_logic_vector (9 downto 0) := "";
+    constant wrt_hltbrst   : std_logic_vector (9 downto 0) := "1000000000";
+    constant wrt_prechrg   : std_logic_vector (9 downto 0) := "1000000001";
 
-    constant rd_read       : std_logic_vector (9 downto 0) := "0000000000";
-    constant rd_data_ready : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency));
-    constant rd_hltbrst    : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency) + 510);
-    constant rd_prechrg    : std_logic_vector (9 downto 0) := std_logic_vector(unsigned(CAS_latency) + 511);
-
+    constant rd_read            : std_logic_vector (9 downto 0) := "0000000000";
+    constant rd_data_ready_cas2 : std_logic_vector (9 downto 0) := "0000000010";
+    constant rd_hltbrst_cas2    : std_logic_vector (9 downto 0) := "1000000000";
+    constant rd_prechrg_cas2    : std_logic_vector (9 downto 0) := "1000000001";
+    constant rd_data_ready_cas3 : std_logic_vector (9 downto 0) := "0000000011";
+    constant rd_hltbrst_cas3    : std_logic_vector (9 downto 0) := "1000000001";
+    constant rd_prechrg_cas3    : std_logic_vector (9 downto 0) := "1000000010";
+    
+    signal init_cmd, rd_cmd, wrt_cmd, ref_cmd : std_logic_vector (3 downto 0);
     signal cmd : std_logic_vector (3 downto 0);
+    
+    signal get_next : std_logic;
+    signal next_req_addr : std_logic_vector (23 downto 0);
+    signal next_req_type : std_logic;
+    signal req_queue_empty : std_logic;
 
     component sdram_request_queue is
         generic
@@ -136,68 +145,92 @@ begin
             read_req => read_req,
             write_req => write_req,
             clock => clock,
-            address => address,
-            get_next =>,
-            next_req_addr =>,
-            next_req_type =>
-            empty
+            address => addr,
+            get_next => get_next,
+            next_req_addr => next_req_addr,
+            next_req_type => next_req_type,
+            empty => req_queue_empty
         );
 
     fsm : process(clock, currentstate) is
         variable statetimer_next : std_logic_vector (9 downto 0);
     begin
-        if rising_edge(clock)
+        if rising_edge(clock) then
+            statetimer_next := std_logic_vector(unsigned(statetimer) + 1);
             case currentstate is
-                statetimer_next := std_logic_vector(unsigned(statetimer) + 1);
                 when init =>
-                    if statetimer = init_exit
+                    if statetimer = init_exit then
                         currentstate <= idle;
-                        statetimer_next := (9 downto 0) => '0';
+                        statetimer_next := (9 downto 0 => '0');
                     end if;
                 when ref =>
-                    if statetimer = ref_exit
+                    if statetimer = ref_exit then
                         currentstate <= idle;
-                        statetimer_next := (9 downto 0) => '0';
+                        statetimer_next := (9 downto 0 => '0');
                     end if;
                 when wrt =>
-                    if statetimer = wrt_prechrg
+                    get_next <= '0';
+                    if statetimer = wrt_prechrg then
                         currentstate <= idle;
-                        statetimer_next := (9 downto 0) => '0';
+                        statetimer_next := (9 downto 0 => '0');
                     end if;
                 when rd =>
-                    if statetimer = rd_prechrg
-                        read_ready <= '0';
-                        currentstate <= idle;
-                        statetimer_next := (9 downto 0) => '0';
-                    elsif statetimer = rd_data_ready
-                        read_ready <= '1';
+                    get_next <= '0';
+                    if CAS_latency = 2 then
+                        if statetimer = rd_prechrg_cas2 then
+                            read_ready <= '0';
+                            currentstate <= idle;
+                            statetimer_next := (9 downto 0 => '0');
+                        elsif statetimer = rd_data_ready_cas2 then
+                            read_ready <= '1';
+                        end if;
+                    elsif CAS_latency = 3 then
+                        if statetimer = rd_prechrg_cas3 then
+                            read_ready <= '0';
+                            currentstate <= idle;
+                            statetimer_next := (9 downto 0 => '0');
+                        elsif statetimer = rd_data_ready_cas3 then
+                            read_ready <= '1';
+                        end if;
                     end if;
                 when idle =>
-
-                end
+                    statetimer_next := (9 downto 0 => '0');
+                    if req_queue_empty = '1' then
+                        currentstate <= ref;
+                    else
+                        get_next <= '1';
+                        if next_req_type = '1' then
+                            currentstate <= rd;
+                        else
+                            currentstate <= wrt;
+                        end if;
+                    end if;
             end case;
         end if;
     end process fsm;
-
+    
+    init_cmd <= cmd_prechrg when statetimer = init_prechrg else
+                cmd_setmode when statetimer = init_setmode else
+                cmd_refresh when (statetimer = init_ref0 or statetimer = init_ref1) else
+                cmd_nop;
+    rd_cmd <=   cmd_read when statetimer = rd_read else
+                cmd_hltbrst when statetimer = rd_hltbrst_cas2 and CAS_latency = 2 else
+                cmd_hltbrst when statetimer = rd_hltbrst_cas3 and CAS_latency = 3 else
+                cmd_prechrg when statetimer = rd_prechrg_cas2 and CAS_latency = 2 else
+                cmd_prechrg when statetimer = rd_prechrg_cas3 and CAS_latency = 3 else
+                cmd_nop;
+    wrt_cmd <=  cmd_write when statetimer = wrt_write else
+                cmd_hltbrst when statetimer = wrt_hltbrst else
+                cmd_prechrg when statetimer = wrt_prechrg else
+                cmd_nop;
+    ref_cmd <=  cmd_refresh when statetimer = ref_refresh else cmd_nop;
+    
     with currentstate select
-    cmd <=  (cmd_prechrg when statetimer = init_prechrg else
-             cmd_setmode when statetimer = init_setmode else
-             cmd_autorefresh when (statetimer = initref0 or statetimer = initref1) else
-             cmd_nop) when init,
-
-            (cmd_nop) when idle,
-
-            (cmd_read when statetimer = rd_read else
-             cmd_hltbrst when statetimer = rd_hltbrst else
-             cmd_prechrg when statetimer = rd_prechrg else
-             cmd_nop) when rd,
-
-            (cmd_write when statetimer = wrt_write else
-             cmd_hltbrst when statetimer = wrt_hltbrst else
-             cmd_prechrg when statetimer = wrt_prechrg else
-             cmd_nop) when wrt,
-
-            (cmd_refresh when statetimer = ref_refresh) when ref,
+    cmd <=  init_cmd when init,
+            cmd_nop when idle,
+            rd_cmd when rd,
+            wrt_cmd when wrt,
+            ref_cmd when ref,
             cmd_nop when others;
 
     sdram_cs <= cmd(3);
