@@ -30,23 +30,23 @@ use ieee.std_logic_1164.all;
 --use unisim.vcomponents.all;
 
 entity fadd is
-   port
-   (
-      c_in  : in  std_logic;
-      a     : in  std_logic;
-      b     : in  std_logic;
-      sum   : out std_logic;
-      c_out : out std_logic
-   );
+    port
+    (
+        c_in  : in  std_logic;
+        a     : in  std_logic;
+        b     : in  std_logic;
+        sum   : out std_logic;
+        c_out : out std_logic
+    );
 end fadd;
 
 architecture behavioral of fadd is
-   signal sum_partial : std_logic;
+    signal sum_partial : std_logic;
 begin
    
-   sum_partial <= a xor b;
-   c_out <= (a and b) or (c_in and sum_partial);
-   sum <= sum_partial xor c_in;
+    sum_partial <= a xor b;
+    c_out <= (a and b) or (c_in and sum_partial);
+    sum <= sum_partial xor c_in;
 
 end behavioral;
 
