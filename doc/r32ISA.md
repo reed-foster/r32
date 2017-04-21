@@ -15,8 +15,6 @@
 <tr><td>bltz</td><td>rs &lt; 0 ? PC += offset : PC++</td><td></td></tr>
 <tr><td>bne</td><td>rs != 0 ? PC += offset : PC++</td><td></td></tr>
 <tr><td>j</td><td>PC ← PC(31:28) || jtarg</td><td></td></tr>
-<tr><td>jal</td><td>PC ← PC(31:28) || jtarg; $ra ? PC + 8</td><td></td></tr>
-<tr><td>jalr</td><td>PC ← rs; $ra ? PC + 8</td><td></td></tr>
 <tr><td>jr</td><td>PC ← rs</td><td></td></tr>
 <tr><td>lb</td><td>rt ← MEM[rs + imm]</td><td>imm is sign-extended; byte at MEM[rs + imm] is sign-extended</td></tr>
 <tr><td>lbu</td><td>rt ← MEM[rs + imm]</td><td>imm is sign-extended; byte at MEM[rs + imm] is zero-extended</td></tr>
