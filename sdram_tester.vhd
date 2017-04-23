@@ -1,0 +1,22 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: Reed Foster
+-- 
+-- Create Date:    11:15:26 04/23/2017 
+-- Design Name: 
+-- Module Name:    sdram_tester - behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+-- Tests the sdram.vhd interface by writing a few bytes to the AS4C16M16S-6TCN SDRAM
+-- and reading them back
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
