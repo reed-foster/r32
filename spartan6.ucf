@@ -1,0 +1,53 @@
+# Clocks
+NET "clock_in" PERIOD = 20 ns | LOC = "K3";
+
+# LEDS
+NET "byte_out<0>" LOC="P11" | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<1>" LOC="N9"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<2>" LOC="M9"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<3>" LOC="P9"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<4>" LOC="T8"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<5>" LOC="N8"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<6>" LOC="P8"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+NET "byte_out<7>" LOC="P7"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
+
+# SDRAM
+NET "udqm"           LOC="F15"   | IOSTANDARD=LVTTL;
+NET "sdram_clk"      LOC="G16"   | IOSTANDARD=LVTTL;
+NET "cke"            LOC="H16"   | IOSTANDARD=LVTTL;
+NET "ba<1>"          LOC="T14"   | IOSTANDARD=LVTTL;
+NET "ba<0>"          LOC="R14"   | IOSTANDARD=LVTTL;
+NET "sdram_cs"       LOC="R1"    | IOSTANDARD=LVTTL;
+NET "ras"            LOC="R2"    | IOSTANDARD=LVTTL;
+NET "cas"            LOC="T4"    | IOSTANDARD=LVTTL;
+NET "we"             LOC="R5"    | IOSTANDARD=LVTTL;
+NET "ldqm"           LOC="T5"    | IOSTANDARD=LVTTL;
+NET "ram_addr<0>"    LOC="T15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<1>"    LOC="R16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<2>"    LOC="P15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<3>"    LOC="P16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<4>"    LOC="N16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<5>"    LOC="M15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<6>"    LOC="M16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<7>"    LOC="L16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<8>"    LOC="K15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<9>"    LOC="K16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<10>"   LOC="R15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<11>"   LOC="J16"   | IOSTANDARD=LVTTL;
+NET "ram_addr<12>"   LOC="H15"   | IOSTANDARD=LVTTL;
+NET "ram_data<0>"    LOC="T13"   | IOSTANDARD=LVTTL;
+NET "ram_data<1>"    LOC="T12"   | IOSTANDARD=LVTTL;
+NET "ram_data<2>"    LOC="R12"   | IOSTANDARD=LVTTL;
+NET "ram_data<3>"    LOC="T9"    | IOSTANDARD=LVTTL;
+NET "ram_data<4>"    LOC="R9"    | IOSTANDARD=LVTTL;
+NET "ram_data<5>"    LOC="T7"    | IOSTANDARD=LVTTL;
+NET "ram_data<6>"    LOC="R7"    | IOSTANDARD=LVTTL;
+NET "ram_data<7>"    LOC="T6"    | IOSTANDARD=LVTTL;
+NET "ram_data<8>"    LOC="F16"   | IOSTANDARD=LVTTL;
+NET "ram_data<9>"    LOC="E15"   | IOSTANDARD=LVTTL;
+NET "ram_data<10>"   LOC="E16"   | IOSTANDARD=LVTTL;
+NET "ram_data<11>"   LOC="D16"   | IOSTANDARD=LVTTL;
+NET "ram_data<12>"   LOC="B16"   | IOSTANDARD=LVTTL;
+NET "ram_data<13>"   LOC="B15"   | IOSTANDARD=LVTTL;
+NET "ram_data<14>"   LOC="C16"   | IOSTANDARD=LVTTL;
+NET "ram_data<15>"   LOC="C15"   | IOSTANDARD=LVTTL;

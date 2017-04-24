@@ -38,7 +38,7 @@ entity sdram is
         addr        : in  std_logic_vector (23 downto 0);
         read_ready  : out std_logic;
         write_ready : out std_logic;
-        addr_ready  : out std_logic_vector (23 downto 0);
+        curr_addr   : out std_logic_vector (23 downto 0);
 
 
         --SDRAM Interface
@@ -100,19 +100,23 @@ architecture behavioral of sdram is
     constant ref_exit      : std_logic_vector (9 downto 0) := "0000001001";
 
     constant wrt_ba        : std_logic_vector (9 downto 0) := "0000000000";
-    constant wrt_write_1   : std_logic_vector (9 downto 0) := "0000000010";
+    constant wrt_bstart    : std_logic_vector (9 downto 0) := "0000000010";
     constant wrt_write     : std_logic_vector (9 downto 0) := "0000000011";
+    constant wrt_bend      : std_logic_vector (9 downto 0) := "1000000010";
     constant wrt_hltbrst   : std_logic_vector (9 downto 0) := "1000000011";
     constant wrt_prechrg   : std_logic_vector (9 downto 0) := "1000000100";
+    constant wrt_exit      : std_logic_vector (9 downto 0) := "1000000101";
 
     constant rd_ba              : std_logic_vector (9 downto 0) := "0000000000";
-    constant rd_read            : std_logic_vector (9 downto 0) := "0000000000";
+    constant rd_read            : std_logic_vector (9 downto 0) := "0000000011";
     constant rd_data_ready_cas2 : std_logic_vector (9 downto 0) := "0000000100";
     constant rd_hltbrst_cas2    : std_logic_vector (9 downto 0) := "1000000011";
     constant rd_prechrg_cas2    : std_logic_vector (9 downto 0) := "1000000100";
+    constant rd_exit_cas2       : std_logic_vector (9 downto 0) := "1000000101";
     constant rd_data_ready_cas3 : std_logic_vector (9 downto 0) := "0000000101";
     constant rd_hltbrst_cas3    : std_logic_vector (9 downto 0) := "1000000100";
     constant rd_prechrg_cas3    : std_logic_vector (9 downto 0) := "1000000101";
+    constant rd_exit_cas3       : std_logic_vector (9 downto 0) := "1000000110";
     
     signal cmd : std_logic_vector (3 downto 0);
     
@@ -123,9 +127,9 @@ architecture behavioral of sdram is
 
     signal ram_addr_tmp : std_logic_vector (12 downto 0);
 
-    signal precharge, setmode, autorefresh, exit_init, exit_refresh, bank_activate,
-           store, burst_stop, load, read_ready_en, write_ready_en : std_logic;
-    signal write_ready_tmp, read_ready_tmp : std_logic;
+    signal precharge, setmode, autorefresh, exit_init, exit_refresh, bank_activate, store, burst_stop,
+           load, read_ready_en, write_ready_en, write_ready_dis, exit_read, exit_write : std_logic;
+    signal write_ready_tmp, read_ready_tmp : std_logic := '0';
 
     component sdram_request_queue is
         generic
@@ -164,9 +168,14 @@ begin
                             (statetimer = rd_hltbrst_cas2 and currentstate = rd and CAS_latency = 2) or
                             (statetimer = rd_hltbrst_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
     load <= '1' when (statetimer = rd_read and currentstate = rd) else '0';
-    write_ready <= '1' when (statetimer = wrt_write_1 and currentstate = wrt) else '0';
-    read_ready <= '1' when ((statetimer = rd_data_ready_cas2 and currentstate = rd and CAS_latency = 2) or
+    write_ready_en <= '1' when (statetimer = wrt_bstart and currentstate = wrt) else '0';
+    read_ready_en <= '1' when ((statetimer = rd_data_ready_cas2 and currentstate = rd and CAS_latency = 2) or
                             (statetimer = rd_data_ready_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
+    write_ready_dis <= '1' when (statetimer = wrt_bend and currentstate = wrt) else '0';
+    exit_write <= '1' when (statetimer = wrt_exit and currentstate = wrt) else '0';
+    exit_read <= '1' when ((statetimer = rd_exit_cas2 and currentstate = rd and CAS_latency = 2) or
+                           (statetimer = rd_exit_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
+
     cmd <= cmd_prechrg when (precharge = '1') else
            cmd_setmode when (setmode = '1') else
            cmd_refresh when (autorefresh = '1') else
@@ -179,6 +188,9 @@ begin
     udqm <= '1' when currentstate = init else '0';
     ldqm <= '1' when currentstate = init else '0';
 
+    sdram_clk <= not clock;
+    cke <= cs;
+    
     sdram_cs <= cmd(3);
     ras <= cmd(2);
     cas <= cmd(1);
@@ -198,19 +210,40 @@ begin
     d_out <= ram_data_in;
     ram_data_out <= d_in;
 
+    curr_addr <= next_req_addr;
+
     request_queue : sdram_request_queue
-        generic map (depth => 8)
-        port map
-        (
-            read_req => read_req,
-            write_req => write_req,
-            clock => clock,
-            address => addr,
-            get_next => get_next,
-            next_req_addr => next_req_addr,
-            next_req_type => next_req_type,
-            empty => req_queue_empty
-        );
+    generic map (depth => 8)
+    port map
+    (
+        read_req => read_req,
+        write_req => write_req,
+        clock => clock,
+        address => addr,
+        get_next => get_next,
+        next_req_addr => next_req_addr,
+        next_req_type => next_req_type,
+        empty => req_queue_empty
+    );
+
+    dvalid : process(clock, write_ready_en, read_ready_en)
+    begin
+        if rising_edge(clock) then
+            if write_ready_en = '1' then
+                write_ready_tmp <= '1';
+            elsif write_ready_dis = '1' then
+                write_ready_tmp <= '0';
+            end if;
+            if read_ready_en = '1' then
+                read_ready_tmp <= '1';
+            elsif (precharge = '1' and currentstate = rd) then
+                read_ready_tmp <= '0';
+            end if;
+        end if;
+    end process;
+
+    write_ready <= write_ready_tmp;
+    read_ready <= read_ready_tmp;
 
     --FSM code
     fsm : process(clock, currentstate, next_state) is
@@ -226,11 +259,10 @@ begin
         end if;
     end process fsm;
 
-    next_state <= idle when (exit_init = '1' or exit_refresh = '1' or (precharge = '1' and currentstate /= init)) else
+    next_state <= idle when (exit_init = '1' or exit_refresh = '1' or exit_write = '1' or exit_read = '1') else
                   ref when (req_queue_empty = '1' and currentstate = idle) else
                   rd when (get_next = '1' and next_req_type = '0' and currentstate = idle) else
                   wrt when (get_next = '1' and next_req_type = '1' and currentstate = idle) else
                   currentstate;
 
 end behavioral;
-
