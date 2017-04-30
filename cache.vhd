@@ -23,7 +23,8 @@ use ieee.std_logic_1164.all;
 entity cache is
     generic
     (
-        lines : integer := 8
+        lines     : integer := 8;
+        line_size : integer := 1024
     );
     port
     (
@@ -39,11 +40,12 @@ entity cache is
 end cache;
 
 architecture behavioral of cache is
-    type line_data_type is array (0 to line_size) of 
+    type line_data_type is array (0 to line_size - 1) of 
         std_logic_vector(7 downto 0);
     type line_type is record
-        tag  : std_logic_vector(21 downto 0);
-        data : line_data_type;
+        dirty : std_logic;
+        tag   : std_logic_vector(21 downto 0);
+        data  : line_data_type;
     end record;
 begin
    

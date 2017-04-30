@@ -33,8 +33,8 @@ entity sdram is
         read_req    : in  std_logic;
         cs          : in  std_logic;
         write_req   : in  std_logic;
-        d_in        : in  std_logic_vector (15 downto 0);
-        d_out       : out std_logic_vector (15 downto 0);
+        --d_in        : in  std_logic_vector (15 downto 0);
+        --d_out       : out std_logic_vector (15 downto 0);
         addr        : in  std_logic_vector (23 downto 0);
         read_ready  : out std_logic;
         write_ready : out std_logic;
@@ -59,9 +59,9 @@ entity sdram is
         we       : out std_logic; --write enable
 
         --address/data
-        ram_addr     : out std_logic_vector (12 downto 0); --address inputs
-        ram_data_in  : in  std_logic_vector (15 downto 0); --data input
-        ram_data_out : out std_logic_vector (15 downto 0)  --data output
+        ram_addr     : out std_logic_vector (12 downto 0) --address inputs
+        --ram_data_in  : in  std_logic_vector (15 downto 0); --data input
+        --ram_data_out : out std_logic_vector (15 downto 0)  --data output
    );
 end sdram;
 
@@ -130,6 +130,8 @@ architecture behavioral of sdram is
     signal precharge, setmode, autorefresh, exit_init, exit_refresh, bank_activate, store, burst_stop,
            load, read_ready_en, write_ready_en, write_ready_dis, exit_read, exit_write : std_logic;
     signal write_ready_tmp, read_ready_tmp : std_logic := '0';
+
+    --signal ram_data_in_tmp, d_in_tmp : std_logic_vector (15 downto 0);
 
     component sdram_request_queue is
         generic
@@ -207,8 +209,10 @@ begin
     
     get_next <= '1' when (req_queue_empty = '0' and currentstate = idle) else '0';
 
-    d_out <= ram_data_in;
-    ram_data_out <= d_in;
+    --ram_data_in_tmp <= ram_data_in;
+    --d_out <= ram_data_in_tmp;
+    --d_in_tmp <= d_in;
+    --ram_data_out <= d_in_tmp;
 
     curr_addr <= next_req_addr;
 

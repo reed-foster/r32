@@ -41,7 +41,7 @@ ARCHITECTURE behavior OF sdram_tester_tb IS
  
     COMPONENT sdram_tester
     PORT(
-         clock_in : IN  std_logic;
+         clock50 : IN  std_logic;
          byte_out : OUT  std_logic_vector(7 downto 0);
          byte_out_v : OUT  std_logic;
          sdram_clk : OUT  std_logic;
@@ -78,13 +78,13 @@ ARCHITECTURE behavior OF sdram_tester_tb IS
    signal ram_addr : std_logic_vector(12 downto 0);
 
    -- Clock period definitions
-   constant clock_in_period : time := 10 ns;
+   constant clock_in_period : time := 20 ns;
  
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: sdram_tester PORT MAP (
-          clock_in => clock_in,
+          clock50 => clock_in,
           byte_out => byte_out,
           byte_out_v => byte_out_v,
           sdram_clk => sdram_clk,

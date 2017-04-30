@@ -1,5 +1,5 @@
 # Clocks
-NET "clock_in" PERIOD = 20 ns | LOC = "K3";
+NET "clock50" PERIOD = 20 ns | LOC = "K3";
 
 # LEDS
 NET "byte_out<0>" LOC="P11" | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
@@ -13,14 +13,14 @@ NET "byte_out<7>" LOC="P7"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW;
 
 # SDRAM
 NET "udqm"           LOC="F15"   | IOSTANDARD=LVTTL;
-NET "sdram_clk"      LOC="G16"   | IOSTANDARD=LVTTL;
+NET "sdram_clk"      LOC="G16"   | IOSTANDARD=LVTTL; #default LOC="G16" #A0 LOC="E7"
 NET "cke"            LOC="H16"   | IOSTANDARD=LVTTL;
-NET "ba<1>"          LOC="T14"   | IOSTANDARD=LVTTL;
-NET "ba<0>"          LOC="R14"   | IOSTANDARD=LVTTL;
-NET "sdram_cs"       LOC="R1"    | IOSTANDARD=LVTTL;
-NET "ras"            LOC="R2"    | IOSTANDARD=LVTTL;
-NET "cas"            LOC="T4"    | IOSTANDARD=LVTTL;
-NET "we"             LOC="R5"    | IOSTANDARD=LVTTL;
+NET "ba<1>"          LOC="T14"   | IOSTANDARD=LVTTL; #default LOC="T14" #A1 LOC="C8"
+NET "ba<0>"          LOC="R14"   | IOSTANDARD=LVTTL; #default LOC="R14" #A2 LOC="D8"
+NET "sdram_cs"       LOC="R1"    | IOSTANDARD=LVTTL; #default LOC="R1"  #A3 LOC="E8"
+NET "ras"            LOC="R2"    | IOSTANDARD=LVTTL; #default LOC="R2"  #A4 LOC="D9"
+NET "cas"            LOC="T4"    | IOSTANDARD=LVTTL; #default LOC="T4"  #A5 LOC="A10"
+NET "we"             LOC="R5"    | IOSTANDARD=LVTTL; #default LOC="R5"  #A6 LOC="B10"
 NET "ldqm"           LOC="T5"    | IOSTANDARD=LVTTL;
 NET "ram_addr<0>"    LOC="T15"   | IOSTANDARD=LVTTL;
 NET "ram_addr<1>"    LOC="R16"   | IOSTANDARD=LVTTL;
@@ -32,7 +32,7 @@ NET "ram_addr<6>"    LOC="M16"   | IOSTANDARD=LVTTL;
 NET "ram_addr<7>"    LOC="L16"   | IOSTANDARD=LVTTL;
 NET "ram_addr<8>"    LOC="K15"   | IOSTANDARD=LVTTL;
 NET "ram_addr<9>"    LOC="K16"   | IOSTANDARD=LVTTL;
-NET "ram_addr<10>"   LOC="R15"   | IOSTANDARD=LVTTL;
+NET "ram_addr<10>"   LOC="R15"   | IOSTANDARD=LVTTL; #default LOC="R15" #A7 LOC="C10"
 NET "ram_addr<11>"   LOC="J16"   | IOSTANDARD=LVTTL;
 NET "ram_addr<12>"   LOC="H15"   | IOSTANDARD=LVTTL;
 NET "ram_data<0>"    LOC="T13"   | IOSTANDARD=LVTTL;
