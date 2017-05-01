@@ -24,21 +24,23 @@ use ieee.numeric_std.all;
 entity sdram is
     generic
     (
-        CAS_latency : integer range 2 to 3 := 3
+        clockperiondns : integer := 6; --default of 166MHz
+        burst_length : std_logic_vector := "111" --000, 001, 010, 011, or 111
     );
     port
     (
         --Processor Interface
         clock       : in  std_logic;
         read_req    : in  std_logic;
-        cs          : in  std_logic;
         write_req   : in  std_logic;
-        --d_in        : in  std_logic_vector (15 downto 0);
-        --d_out       : out std_logic_vector (15 downto 0);
+        cs          : in  std_logic;
+        d_in        : in  std_logic_vector (15 downto 0);
+        d_out       : out std_logic_vector (15 downto 0);
         addr        : in  std_logic_vector (23 downto 0);
         read_ready  : out std_logic;
         write_ready : out std_logic;
-        curr_addr   : out std_logic_vector (23 downto 0);
+        rd          : in  std_logic;
+        wrt         : in  std_logic;
 
 
         --SDRAM Interface
@@ -60,23 +62,62 @@ entity sdram is
 
         --address/data
         ram_addr     : out std_logic_vector (12 downto 0) --address inputs
-        --ram_data_in  : in  std_logic_vector (15 downto 0); --data input
-        --ram_data_out : out std_logic_vector (15 downto 0)  --data output
+        ram_data_in  : out std_logic_vector (15 downto 0); --data input
+        ram_data_out : in  std_logic_vector (15 downto 0)  --data output
    );
 end sdram;
 
 architecture behavioral of sdram is
     
-    type fsm_states is (init, idle, rd, wrt, ref);
+    constant CAS_latency : integer := 3;
 
-    signal currentstate : fsm_states := init;
-    signal next_state : fsm_states;
+    --timing constants (in ns)
+    constant trc  : integer := 60; --row cycle time (same bank)
+    constant trfc : integer := 60; --refresh cycle time
+    constant trcd : integer := 18; --ras# to cas# delay (same bank)
+    constant trp  : integer := 18; --precharge to refresh/row activate (same bank)
+    constant trrd : integer := 12; --row activate to row activate (different bank)
+    constant tmrd : integer := 12; --mode register set
+    constant tras : integer := 42; --row activate to precharge (same bank)
+    constant twr  : integer := 12; --write recovery time  
+
+    signal init_startup_timer    : integer := 200000 / clockperiodns - 1; --countdown for 200us
+    signal init_pretoset_timer   : integer := trp  / clockperiodns - 1;
+    signal init_settoref0_timer  : integer := tmrd / clockperiodns - 1;
+    signal init_ref0toref1_timer : integer := trp  / clockperiodns - 1;
+    signal init_ref1toexit_timer : integer := trc  / clockperiodns - 1;
+
+    constant bank_activate_delay_default : integer := trcd / clockperiodns;
+    signal wrt_bnktowrt_timer : integer := bank_activate_delay_default;
+    signal rd_bnktord_timer   : integer := bank_activate_delay_default;
+
+    constant rd_timer_default : integer := 508; --509 cycles
+    signal rd_timer : integer := rd_timer_default;
+
+    constant wrt_timer_default : integer := 510; --511 cycles
+    signal wrt_timer : integer := wrt_timer_default;
+
+    constant refresh_delay_default : integer := trc / clockperiodns - 1;
+    signal refresh_reftoidle_timer : integer := refresh_delay_default;
     
-    signal statetimer : std_logic_vector (9 downto 0) := "0000000000";
-    
+    type fsm_states is (
+        --init
+        init_wait0, init_wait1, init_precharge, init_wait2, init_setmode, init_wait3, init_refresh0,
+        init_wait4, init_refresh1, init_wait5,
+        --idle
+        idle,
+        --read
+        rd_bankact, rd_wait0, rd, rd_wait1, rd_wait2, rd_wait3, rd_bursthlt, rd_precharge, rd_wait4, rd_wait5,
+        --write
+        wrt_bankact, wrt_wait0, wrt, wrt_wait1, wrt_bursthlt, wrt_precharge, wrt_wait2,
+        --refresh
+        refresh, refresh_wait);
+
+    signal state : fsm_states := init;
+    signal nextstate : fsm_states;
+
     --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
-    constant mode_reg_cas2 : std_logic_vector (12 downto 0) := "000" & '0' & "00" & "010" & '0' & "111";
-    constant mode_reg_cas3 : std_logic_vector (12 downto 0) := "000" & '0' & "00" & "011" & '0' & "111";
+    signal mode_reg : std_logic_vector (12 downto 0);
     
     --commands in the form cs#, ras#, cas#, we#
     constant cmd_deselect : std_logic_vector (3 downto 0) := "1111";
@@ -87,186 +128,258 @@ architecture behavioral of sdram is
     constant cmd_refresh  : std_logic_vector (3 downto 0) := "0001";
     constant cmd_setmode  : std_logic_vector (3 downto 0) := "0000";
     constant cmd_hltbrst  : std_logic_vector (3 downto 0) := "0110";
-
-
-    --timing constants
-    constant init_prechrg  : std_logic_vector (9 downto 0) := "0000000001";
-    constant init_setmode  : std_logic_vector (9 downto 0) := "0000000100";
-    constant init_ref0     : std_logic_vector (9 downto 0) := "0000000110";
-    constant init_ref1     : std_logic_vector (9 downto 0) := "0000001101";
-    constant init_exit     : std_logic_vector (9 downto 0) := "0000010001";
-
-    constant ref_refresh   : std_logic_vector (9 downto 0) := "0000000000";
-    constant ref_exit      : std_logic_vector (9 downto 0) := "0000001001";
-
-    constant wrt_ba        : std_logic_vector (9 downto 0) := "0000000000";
-    constant wrt_bstart    : std_logic_vector (9 downto 0) := "0000000010";
-    constant wrt_write     : std_logic_vector (9 downto 0) := "0000000011";
-    constant wrt_bend      : std_logic_vector (9 downto 0) := "1000000010";
-    constant wrt_hltbrst   : std_logic_vector (9 downto 0) := "1000000011";
-    constant wrt_prechrg   : std_logic_vector (9 downto 0) := "1000000100";
-    constant wrt_exit      : std_logic_vector (9 downto 0) := "1000000101";
-
-    constant rd_ba              : std_logic_vector (9 downto 0) := "0000000000";
-    constant rd_read            : std_logic_vector (9 downto 0) := "0000000011";
-    constant rd_data_ready_cas2 : std_logic_vector (9 downto 0) := "0000000100";
-    constant rd_hltbrst_cas2    : std_logic_vector (9 downto 0) := "1000000011";
-    constant rd_prechrg_cas2    : std_logic_vector (9 downto 0) := "1000000100";
-    constant rd_exit_cas2       : std_logic_vector (9 downto 0) := "1000000101";
-    constant rd_data_ready_cas3 : std_logic_vector (9 downto 0) := "0000000101";
-    constant rd_hltbrst_cas3    : std_logic_vector (9 downto 0) := "1000000100";
-    constant rd_prechrg_cas3    : std_logic_vector (9 downto 0) := "1000000101";
-    constant rd_exit_cas3       : std_logic_vector (9 downto 0) := "1000000110";
     
-    signal cmd : std_logic_vector (3 downto 0);
-    
-    signal get_next : std_logic := '0';
-    signal next_req_addr : std_logic_vector (23 downto 0);
-    signal next_req_type : std_logic;
+    signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
+
+    signal iob_cs : std_logic;
+    signal iob_ras : std_logic;
+    signal iob_cas : std_logic;
+    signal iob_we : std_logic;
+    attribute iob : string;
+    attribute iob of iob_cs  : signal is "true";
+    attribute iob of iob_ras : signal is "true";
+    attribute iob of iob_cas : signal is "true";
+    attribute iob of iob_we  : signal is "true";
+
+    signal req_queue_enqueue : std_logic := '0';
+    signal current_address : std_logic_vector (24 downto 0);
+
+    signal read_active : std_logic := '0';
+    signal write_active : std_logic := '0';
+
+    signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
 
-    signal ram_addr_tmp : std_logic_vector (12 downto 0);
-
-    signal precharge, setmode, autorefresh, exit_init, exit_refresh, bank_activate, store, burst_stop,
-           load, read_ready_en, write_ready_en, write_ready_dis, exit_read, exit_write : std_logic;
-    signal write_ready_tmp, read_ready_tmp : std_logic := '0';
-
-    --signal ram_data_in_tmp, d_in_tmp : std_logic_vector (15 downto 0);
-
-    component sdram_request_queue is
-        generic
-        (
-            depth : integer range 1 to 16 := 8
-        );
-        port
-        (
-            read_req      : in  std_logic;
-            write_req     : in  std_logic;
-            clock         : in  std_logic;
-            address       : in  std_logic_vector (23 downto 0);
-            get_next      : in  std_logic;
-            next_req_addr : out std_logic_vector (23 downto 0);
-            next_req_type : out std_logic; --1 for write, 0 for read
-            empty         : out std_logic
-        );
+    component fifo is
+    generic
+    (
+        depth : integer range 1 to 16 := 8,
+        bitwidth : integer range 1 to 32 := 32
+    );
+    port
+    (
+        clock   : in  std_logic;
+        enqueue : in  std_logic;
+        dequeue : in  std_logic;
+        d_in    : in  std_logic_vector (bitwidth - 1 downto 0);
+        d_out   : out std_logic_vector (bitwidth - 1 downto 0);
+        empty   : out std_logic
+    );
     end component;
 
 begin
     
-    precharge <= '1' when ((statetimer = init_prechrg and currentstate = init) or
-                           (statetimer = wrt_prechrg and currentstate = wrt) or
-                           (statetimer = rd_prechrg_cas2 and currentstate = rd and CAS_latency = 2) or
-                           (statetimer = rd_prechrg_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
-    setmode <= '1' when (statetimer = init_setmode and currentstate = init) else '0';
-    autorefresh <= '1' when ((statetimer = init_ref0 and currentstate = init) or
-                             (statetimer = init_ref1 and currentstate = init) or
-                             (statetimer = ref_refresh and currentstate = ref)) else '0';
-    exit_init <= '1' when (statetimer = init_exit and currentstate = init) else '0';
-    exit_refresh <= '1' when (statetimer = ref_exit and currentstate = ref) else '0';
-    bank_activate <= '1' when ((statetimer = wrt_ba and currentstate = rd) or
-                               (statetimer = rd_ba and currentstate = wrt)) else '0';
-    store <= '1' when (statetimer = wrt_write and currentstate = wrt) else '0';
-    burst_stop <= '1' when ((statetimer = wrt_hltbrst and currentstate = wrt) or
-                            (statetimer = rd_hltbrst_cas2 and currentstate = rd and CAS_latency = 2) or
-                            (statetimer = rd_hltbrst_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
-    load <= '1' when (statetimer = rd_read and currentstate = rd) else '0';
-    write_ready_en <= '1' when (statetimer = wrt_bstart and currentstate = wrt) else '0';
-    read_ready_en <= '1' when ((statetimer = rd_data_ready_cas2 and currentstate = rd and CAS_latency = 2) or
-                            (statetimer = rd_data_ready_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
-    write_ready_dis <= '1' when (statetimer = wrt_bend and currentstate = wrt) else '0';
-    exit_write <= '1' when (statetimer = wrt_exit and currentstate = wrt) else '0';
-    exit_read <= '1' when ((statetimer = rd_exit_cas2 and currentstate = rd and CAS_latency = 2) or
-                           (statetimer = rd_exit_cas3 and currentstate = rd and CAS_latency = 3)) else '0';
-
-    cmd <= cmd_prechrg when (precharge = '1') else
-           cmd_setmode when (setmode = '1') else
-           cmd_refresh when (autorefresh = '1') else
-           cmd_bnkact when (bank_activate = '1') else
-           cmd_write when (store = '1') else
-           cmd_read when (load = '1') else
-           cmd_hltbrst when (burst_stop = '1') else
-           cmd_deselect;
-
-    udqm <= '1' when currentstate = init else '0';
-    ldqm <= '1' when currentstate = init else '0';
-
-    sdram_clk <= not clock;
-    cke <= cs;
-    
-    sdram_cs <= cmd(3);
-    ras <= cmd(2);
-    cas <= cmd(1);
-    we <= cmd(0);
-
-    ba <= next_req_addr(23 downto 22);
-    ram_addr_tmp <= next_req_addr(21 downto 9) when bank_activate = '0' else "0000" & next_req_addr(8 downto 0);
-
-    ram_addr <= ram_addr_tmp when (precharge = '0' and setmode = '0') else 
-                ram_addr_tmp(12 downto 11) & '1' & ram_addr_tmp(9 downto 0) when (precharge = '1' and setmode = '0') else
-                "000000" & "010" & '0' & "111" when (setmode = '1' and CAS_latency = 2) else
-                "000000" & "011" & '0' & "111" when (setmode = '1' and CAS_latency = 3) else
-                (12 downto 0 => '0');
-    
-    get_next <= '1' when (req_queue_empty = '0' and currentstate = idle) else '0';
-
-    --ram_data_in_tmp <= ram_data_in;
-    --d_out <= ram_data_in_tmp;
-    --d_in_tmp <= d_in;
-    --ram_data_out <= d_in_tmp;
-
-    curr_addr <= next_req_addr;
-
-    request_queue : sdram_request_queue
-    generic map (depth => 8)
+    tx_data : fifo
+    generic map
+    (
+        depth => 512,
+        bitwidth => 16
+    );
     port map
     (
-        read_req => read_req,
-        write_req => write_req,
         clock => clock,
-        address => addr,
-        get_next => get_next,
-        next_req_addr => next_req_addr,
-        next_req_type => next_req_type,
+        enqueue => wrt,
+        dequeue => write_active,
+        d_in => d_in,
+        d_out => ram_data_in,
+        empty =>
+    );
+
+    rx_data : fifo
+    generic map
+    (
+        depth => 512,
+        bitwidth => 16
+    );
+    port map
+    (
+        clock => clock,
+        enqueue => read_active,
+        dequeue => rd,
+        d_in => ram_data_out,
+        d_out => d_out,
+        empty =>
+    );
+
+    req_queue : fifo
+    generic map
+    (
+        depth => 4,
+        bitwidth => 25
+    );
+    port map
+    (
+        clock => clock,
+        enqueue => req_queue_enqueue,
+        dequeue => get_next_request,
+        d_in => (write_req & addr),
+        d_out => current_address,
         empty => req_queue_empty
     );
 
-    dvalid : process(clock, write_ready_en, read_ready_en)
+    req_queue_enqueue <= read_req or write_req;
+
+    mode_reg <= "000" & '0' & "00" & std_logic_vector(to_unsigned(CAS_latency, 3)) & '0' & burst_length;
+    
+    iob_we <= iob_cmd(0);
+    iob_cas <= iob_cmd(1);
+    iob_ras <= iob_cmd(2);
+    iob_cs <= iob_cmd(3);
+
+    fsm : process(clock, state)
     begin
         if rising_edge(clock) then
-            if write_ready_en = '1' then
-                write_ready_tmp <= '1';
-            elsif write_ready_dis = '1' then
-                write_ready_tmp <= '0';
-            end if;
-            if read_ready_en = '1' then
-                read_ready_tmp <= '1';
-            elsif (precharge = '1' and currentstate = rd) then
-                read_ready_tmp <= '0';
-            end if;
+            nextstate <= state;
+            case state is
+                --------------------------------------------------------
+                -- Initialization
+                --------------------------------------------------------
+                when init_wait0 =>
+                    if init_startup_timer > 0 then
+                        init_startup_timer <= init_startup_timer - 1;
+                    else
+                        nextstate <= init_wait1;
+                    end if;
+
+                when init_wait1 => nextstate <= init_precharge;
+
+                when init_precharge =>
+                    nextstate <= init_wait2;
+
+                when init_wait2 =>
+                    if init_pretoset_timer > 0 then
+                        init_pretoset_timer <= init_pretoset_timer - 1;
+                    else
+                        nextstate <= init_setmode;
+                    end if;
+
+                when init_setmode =>
+                    nextstate <= init_wait4;
+
+                when init_wait3 => 
+                    if init_settoref0_timer > 0 then
+                        init_settoref0_timer <= init_settoref0_timer - 1;
+                    else
+                        nextstate <= init_refresh0;
+                    end if;
+
+                when init_refresh0 =>
+                    nextstate <= init_wait4;
+
+                when init_wait4 =>
+                    if init_ref0toref1_timer > 0 then
+                        init_ref0toref1_timer <= init_ref0toref1_timer - 1;
+                    else
+                        nextstate <= init_refresh1;
+                    end if;
+
+                when init_refresh1 =>
+                    nextstate <= init_wait5;
+
+                when init_wait5 =>
+                    if init_ref1toexit_timer > 0 then
+                        init_ref1toexit_timer <= init_ref1toexit_timer - 1;
+                    else
+                        nextstate <= idle;
+                    end if;
+
+                --------------------------------------------------------
+                -- Idle
+                --------------------------------------------------------
+                when idle =>
+                    nextstate <= idle;
+                    --need actual implementation
+
+                --------------------------------------------------------
+                -- Read
+                --------------------------------------------------------
+                when rd_bankact =>
+                    nextstate <= rd_wait0;
+
+                when rd_wait0 =>
+                    if rd_bnktord_timer > 0 then
+                        rd_bnktord_timer <= rd_bnktord_timer - 1;
+                    else
+                        rd_bnktord_timer <= bank_activate_delay_default;
+                        nextstate <= rd;
+                    end if;
+
+                when rd =>
+
+                when rd_wait1 => nextstate <= rd_wait2;
+                when rd_wait2 => nextstate <= rd_wait3;
+
+                when rd_wait3 =>
+                    if rd_timer > 0 then
+                        rd_timer <= rd_timer - 1;
+                    else
+                        rd_timer <= rd_timer_default;
+                        nextstate <= rd_bursthlt;
+                    end if;
+
+                when rd_bursthlt =>
+                    nextstate <= rd_precharge;
+
+                when rd_precharge =>
+                    nextstate <= rd_wait4;
+
+                when rd_wait4 =>
+                    nextstate <= rd_wait5;
+
+                when rd_wait5 =>
+                    nextstate <= idle;
+
+                --------------------------------------------------------
+                -- Write
+                --------------------------------------------------------
+                when wrt_bankact =>
+                    nextstate <= wrt_wait0;
+
+                when wrt_wait0 =>
+                    if wrt_bnktowrt_timer > 0 then
+                        wrt_bnktowrt_timer <= wrt_bnktowrt_timer - 1;
+                    else
+                        wrt_bnktowrt_timer <= bank_activate_delay_default;
+                        nextstate <= wrt;
+                    end if;
+
+                when wrt =>
+                    nextstate <= wrt_wait1;
+
+                when wrt_wait1 =>
+                    if wrt_timer > 0 then
+                        wrt_timer <= wrt_timer - 1;
+                    else
+                        wrt_timer <= wrt_timer_default;
+                        nextstate <= wrt_bursthlt;
+                    end if;
+
+                when wrt_bursthlt =>
+                    nextstate <= wrt_precharge;
+
+                when wrt_precharge =>
+                    nextstate <= wrt_wait2;
+
+                when wrt_wait2 =>
+                    nextstate <= idle;
+
+                --------------------------------------------------------
+                -- Refresh
+                --------------------------------------------------------
+                when refresh =>
+                    nextstate <= refresh_wait;
+
+                when refresh_wait =>
+                    if refresh_reftoidle_timer > 0 then
+                        refresh_reftoidle_timer <= refresh_reftoidle_timer - 1;
+                    else
+                        refresh_reftoidle_timer <= refresh_delay_default;
+                        nextstate <= idle;
+                    end if;
+
+            end case;
+            state <= nextstate;
         end if;
     end process;
-
-    write_ready <= write_ready_tmp;
-    read_ready <= read_ready_tmp;
-
-    --FSM code
-    fsm : process(clock, currentstate, next_state) is
-        variable statetimer_next : std_logic_vector (9 downto 0);
-    begin
-        if rising_edge(clock) then
-            statetimer_next := std_logic_vector(unsigned(statetimer) + 1);
-            if (next_state /= currentstate) then
-                statetimer_next := "0000000000";
-            end if;
-            currentstate <= next_state;
-            statetimer <= statetimer_next;
-        end if;
-    end process fsm;
-
-    next_state <= idle when (exit_init = '1' or exit_refresh = '1' or exit_write = '1' or exit_read = '1') else
-                  ref when (req_queue_empty = '1' and currentstate = idle) else
-                  rd when (get_next = '1' and next_req_type = '0' and currentstate = idle) else
-                  wrt when (get_next = '1' and next_req_type = '1' and currentstate = idle) else
-                  currentstate;
 
 end behavioral;
