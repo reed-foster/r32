@@ -53,7 +53,7 @@ entity sdram is
         ldqm : out std_logic;
 
         --enable/disable signals
-        --control signals: ba0, ba1, cs#, ras#, cas#, and we#
+        --control signals: ba, cs#, ras#, cas#, and we#
         ba       : out std_logic_vector (1 downto 0); --bank activate "00" => A, "01" => B, etc.
         sdram_cs : out std_logic; --enables/disables command decoder
         ras      : out std_logic; --row address strobe
@@ -68,7 +68,7 @@ entity sdram is
 end sdram;
 
 architecture behavioral of sdram is
-    
+
     constant CAS_latency : integer := 3;
 
     --timing constants (in ns)
@@ -126,8 +126,15 @@ architecture behavioral of sdram is
     constant cmd_bnkact   : std_logic_vector (3 downto 0) := "0011";
     constant cmd_prechrg  : std_logic_vector (3 downto 0) := "0010"; --A10 must be high
     constant cmd_refresh  : std_logic_vector (3 downto 0) := "0001";
-    constant cmd_setmode  : std_logic_vector (3 downto 0) := "0000";
+    constant cmd_setmode  : std_logic_vector (3 downto 0) := "0000"; --A10 is low
     constant cmd_hltbrst  : std_logic_vector (3 downto 0) := "0110";
+
+    -- A10, udqm, ldqm, ba, cs#, ras#, cas#, we#
+    signal sdram_control : std_logic_vector (8 downto 0);
+    constant ram_prechrg : std_logic_vector (8 downto 0) := '1' & "11" & "11" & cmd_prechrg;
+    constant ram_setmode : std_logic_vector (8 downto 0) := '0' & "11" & "00" & cmd_setmode;
+    constant ram_refresh : std_logic_vector (8 downto 0) := '1' & "11" & "11" & cmd_refresh;
+    constant  
     
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
 
