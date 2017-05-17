@@ -24,7 +24,7 @@ use ieee.numeric_std.all;
 entity sdram is
     generic
     (
-        clockperiondns : integer := 6; --default of 166MHz
+        clockperiodns : integer := 6; --default of 166MHz
         burst_length : std_logic_vector := "111" --000, 001, 010, 011, or 111
     );
     port
@@ -33,7 +33,7 @@ entity sdram is
         clock       : in  std_logic;
         read_req    : in  std_logic;
         write_req   : in  std_logic;
-        cs          : in  std_logic;
+        cs          : in  std_logic; --1 enables command queues, 0 disable
         d_in        : in  std_logic_vector (15 downto 0);
         d_out       : out std_logic_vector (15 downto 0);
         addr        : in  std_logic_vector (23 downto 0);
@@ -81,11 +81,17 @@ architecture behavioral of sdram is
     constant tras : integer := 42; --row activate to precharge (same bank)
     constant twr  : integer := 12; --write recovery time  
 
-    signal init_startup_timer    : integer := 200000 / clockperiodns - 1; --countdown for 200us
-    signal init_pretoset_timer   : integer := trp  / clockperiodns - 1;
-    signal init_settoref0_timer  : integer := tmrd / clockperiodns - 1;
-    signal init_ref0toref1_timer : integer := trp  / clockperiodns - 1;
-    signal init_ref1toexit_timer : integer := trc  / clockperiodns - 1;
+    constant init_startup_timer_default    : integer := 200000 / clockperiodns - 1; --countdown for 200us
+    constant init_pretoset_timer_default   : integer := trp / clockperiodns - 1;
+    constant init_settoref0_timer_default  : integer := tmrd / clockperiodns - 1;
+    constant init_ref0toref1_timer_default : integer := trp / clockperiodns - 1;
+    constant init_ref1toexit_timer_default : integer := trc / clockperiodns - 1;
+
+    signal init_startup_timer    : integer := init_startup_timer_default;
+    signal init_pretoset_timer   : integer := init_pretoset_timer_default;
+    signal init_settoref0_timer  : integer := init_settoref0_timer_default;
+    signal init_ref0toref1_timer : integer := init_ref0toref1_timer_default;
+    signal init_ref1toexit_timer : integer := init_ref1toexit_timer_default;
 
     constant bank_activate_delay_default : integer := trcd / clockperiodns;
     signal wrt_bnktowrt_timer : integer := bank_activate_delay_default;
@@ -121,6 +127,7 @@ architecture behavioral of sdram is
     
     --commands in the form cs#, ras#, cas#, we#
     constant cmd_deselect : std_logic_vector (3 downto 0) := "1111";
+    constant cmd_nop      : std_logic_vector (3 downto 0) := "0111";
     constant cmd_read     : std_logic_vector (3 downto 0) := "0101"; --A10 must be low
     constant cmd_write    : std_logic_vector (3 downto 0) := "0100"; --A10 must be low
     constant cmd_bnkact   : std_logic_vector (3 downto 0) := "0011";
@@ -131,10 +138,7 @@ architecture behavioral of sdram is
 
     -- A10, udqm, ldqm, ba, cs#, ras#, cas#, we#
     signal sdram_control : std_logic_vector (8 downto 0);
-    constant ram_prechrg : std_logic_vector (8 downto 0) := '1' & "11" & "11" & cmd_prechrg;
-    constant ram_setmode : std_logic_vector (8 downto 0) := '0' & "11" & "00" & cmd_setmode;
-    constant ram_refresh : std_logic_vector (8 downto 0) := '1' & "11" & "11" & cmd_refresh;
-    constant  
+    constant sdram_control_nop : std_logic_vector (8 downto 0) := '0' & "11" & "00" & cmd_nop;
     
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
 
@@ -242,18 +246,25 @@ begin
                 -- Initialization
                 --------------------------------------------------------
                 when init_wait0 =>
+                    --A10, dqm, ba, command
+                    cke <= '0';
+                    sdram_control <= '0' & "11" & "00" & cmd_deselect;
                     if init_startup_timer > 0 then
                         init_startup_timer <= init_startup_timer - 1;
                     else
                         nextstate <= init_wait1;
                     end if;
 
-                when init_wait1 => nextstate <= init_precharge;
+                when init_wait1 =>
+                    nextstate <= init_precharge;
+                    cke <= '1';
 
                 when init_precharge =>
+                    sdram_control <= '1' & "11" & "00" & cmd_prechrg;
                     nextstate <= init_wait2;
 
                 when init_wait2 =>
+                    sdram_control <= sdram_control_nop;
                     if init_pretoset_timer > 0 then
                         init_pretoset_timer <= init_pretoset_timer - 1;
                     else
@@ -261,9 +272,11 @@ begin
                     end if;
 
                 when init_setmode =>
+                    sdram_control <= '0' & "11" & "00" & cmd_setmode;
                     nextstate <= init_wait4;
 
-                when init_wait3 => 
+                when init_wait3 =>
+                    sdram_control <= sdram_control_nop;
                     if init_settoref0_timer > 0 then
                         init_settoref0_timer <= init_settoref0_timer - 1;
                     else
@@ -271,9 +284,11 @@ begin
                     end if;
 
                 when init_refresh0 =>
+                    sdram_control <= '0' & "11" & "00" & cmd_refresh;
                     nextstate <= init_wait4;
 
                 when init_wait4 =>
+                    sdram_control <= sdram_control_nop;
                     if init_ref0toref1_timer > 0 then
                         init_ref0toref1_timer <= init_ref0toref1_timer - 1;
                     else
@@ -281,9 +296,11 @@ begin
                     end if;
 
                 when init_refresh1 =>
+                    sdram_control <= '0' & "11" & "00" & cmd_refresh;
                     nextstate <= init_wait5;
 
                 when init_wait5 =>
+                    sdram_control <= sdram_control_nop;
                     if init_ref1toexit_timer > 0 then
                         init_ref1toexit_timer <= init_ref1toexit_timer - 1;
                     else
@@ -294,6 +311,7 @@ begin
                 -- Idle
                 --------------------------------------------------------
                 when idle =>
+                    sdram_control <= sdram_control_nop;
                     nextstate <= idle;
                     --need actual implementation
 
