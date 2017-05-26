@@ -137,6 +137,7 @@ architecture behavioral of sdram is
     constant cmd_hltbrst  : std_logic_vector (3 downto 0) := "0110";
 
     -- A10, udqm, ldqm, ba, cs#, ras#, cas#, we#
+    -- NEED TO FIX DQMS for everything except init state needs to be lows
     signal sdram_control : std_logic_vector (8 downto 0);
     constant sdram_control_nop : std_logic_vector (8 downto 0) := '0' & "11" & "00" & cmd_nop;
     
@@ -152,17 +153,20 @@ architecture behavioral of sdram is
     attribute iob of iob_cas : signal is "true";
     attribute iob of iob_we  : signal is "true";
 
-    signal req_queue_enqueue : std_logic := '0';
+    --Holds the current address
+    -- (24 downto 23) => bank
+    -- (22 downto 9) => row address
+    -- (8 downto 0) => column address 
     signal current_address : std_logic_vector (24 downto 0);
-
-    signal read_active : std_logic := '0';
-    signal write_active : std_logic := '0';
+    signal req_queue_enqueue : std_logic := '0';
 
     signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
     
     --data fifos
     signal tx_ready, rx_ready : std_logic;
+    signal read_active : std_logic := '0';
+    signal write_active : std_logic := '0';
 
     component fifo is
     generic
@@ -323,10 +327,11 @@ begin
                 --------------------------------------------------------
                 when rd_bankact =>
                     --A10, dqm, ba, command
-                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23)
+                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23) & cmd_bnkact;
                     nextstate <= rd_wait0;
 
                 when rd_wait0 =>
+                    sdram_control <= sdram_control_nop;
                     if rd_bnktord_timer > 0 then
                         rd_bnktord_timer <= rd_bnktord_timer - 1;
                     else
@@ -335,9 +340,13 @@ begin
                     end if;
 
                 when rd =>
+                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_read;
                     nextstate <= rd_wait1;
 
-                when rd_wait1 => nextstate <= rd_wait2;
+                when rd_wait1 =>
+                    sdram_control <= sdram_control_nop;
+                    nextstate <= rd_wait2;
+
                 when rd_wait2 => nextstate <= rd_wait3;
 
                 when rd_wait3 =>
@@ -349,12 +358,15 @@ begin
                     end if;
 
                 when rd_bursthlt =>
+                    sdram_control <= '0' & "11" & "00" & cmd_hltbrst;
                     nextstate <= rd_precharge;
 
                 when rd_precharge =>
+                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_prechrg;
                     nextstate <= rd_wait4;
 
                 when rd_wait4 =>
+                    sdram_control <= sdram_control_nop;
                     nextstate <= rd_wait5;
 
                 when rd_wait5 =>
@@ -364,9 +376,12 @@ begin
                 -- Write
                 --------------------------------------------------------
                 when wrt_bankact =>
+                    --A10, dqm, ba, command
+                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23) & cmd_bnkact;
                     nextstate <= wrt_wait0;
 
                 when wrt_wait0 =>
+                    sdram_control <= sdram_control_nop;
                     if wrt_bnktowrt_timer > 0 then
                         wrt_bnktowrt_timer <= wrt_bnktowrt_timer - 1;
                     else
@@ -375,9 +390,11 @@ begin
                     end if;
 
                 when wrt =>
+                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_write;
                     nextstate <= wrt_wait1;
 
                 when wrt_wait1 =>
+                    sdram_control <= sdram_control_nop;
                     if wrt_timer > 0 then
                         wrt_timer <= wrt_timer - 1;
                     else
@@ -386,12 +403,15 @@ begin
                     end if;
 
                 when wrt_bursthlt =>
+                    sdram_control <= '0' & "11" & "00" & cmd_hltbrst;
                     nextstate <= wrt_precharge;
 
                 when wrt_precharge =>
+                    sdram_control <= sdram_control_nop;
                     nextstate <= wrt_wait2;
 
                 when wrt_wait2 =>
+                    sdram_control <= sdram_control_nop;
                     nextstate <= idle;
 
                 --------------------------------------------------------
