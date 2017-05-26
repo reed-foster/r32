@@ -61,7 +61,7 @@ entity sdram is
         we       : out std_logic; --write enable
 
         --address/data
-        ram_addr     : out std_logic_vector (12 downto 0) --address inputs
+        ram_addr     : out std_logic_vector (12 downto 0); --address inputs
         ram_data_in  : out std_logic_vector (15 downto 0); --data input
         ram_data_out : in  std_logic_vector (15 downto 0)  --data output
    );
@@ -160,11 +160,14 @@ architecture behavioral of sdram is
 
     signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
+    
+    --data fifos
+    signal tx_ready, rx_ready : std_logic;
 
     component fifo is
     generic
     (
-        depth : integer range 1 to 16 := 8,
+        depth : integer range 1 to 16 := 8;
         bitwidth : integer range 1 to 32 := 32
     );
     port
@@ -185,7 +188,7 @@ begin
     (
         depth => 512,
         bitwidth => 16
-    );
+    )
     port map
     (
         clock => clock,
@@ -193,7 +196,7 @@ begin
         dequeue => write_active,
         d_in => d_in,
         d_out => ram_data_in,
-        empty =>
+        empty => tx_empty
     );
 
     rx_data : fifo
@@ -201,7 +204,7 @@ begin
     (
         depth => 512,
         bitwidth => 16
-    );
+    )
     port map
     (
         clock => clock,
@@ -209,7 +212,7 @@ begin
         dequeue => rd,
         d_in => ram_data_out,
         d_out => d_out,
-        empty =>
+        empty => rx_empty
     );
 
     req_queue : fifo
@@ -217,7 +220,7 @@ begin
     (
         depth => 4,
         bitwidth => 25
-    );
+    )
     port map
     (
         clock => clock,
@@ -319,6 +322,8 @@ begin
                 -- Read
                 --------------------------------------------------------
                 when rd_bankact =>
+                    --A10, dqm, ba, command
+                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23)
                     nextstate <= rd_wait0;
 
                 when rd_wait0 =>
@@ -330,6 +335,7 @@ begin
                     end if;
 
                 when rd =>
+                    nextstate <= rd_wait1;
 
                 when rd_wait1 => nextstate <= rd_wait2;
                 when rd_wait2 => nextstate <= rd_wait3;

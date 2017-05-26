@@ -24,7 +24,7 @@ use ieee.numeric_std.all;
 entity fifo is
     generic
     (
-        depth : integer range 1 to 512 := 8,
+        depth : integer range 1 to 512 := 8;
         bitwidth : integer range 1 to 32 := 32
     );
     port
@@ -58,7 +58,7 @@ begin
 
     process (clock, enqueue, dequeue, d_in, full, empty_tmp)
     begin
-        if rising_edge(clock)
+        if rising_edge(clock) then
             if enqueue = '1' and full /= '1' then
                 data(write_addr) <= d_in;
                 write_addr <= write_addr + 1;
