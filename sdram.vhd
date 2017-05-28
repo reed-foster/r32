@@ -30,17 +30,17 @@ entity sdram is
     port
     (
         --Processor Interface
-        clock       : in  std_logic;
-        read_req    : in  std_logic;
-        write_req   : in  std_logic;
-        cs          : in  std_logic; --1 enables command queues, 0 disable
-        d_in        : in  std_logic_vector (15 downto 0);
-        d_out       : out std_logic_vector (15 downto 0);
-        addr        : in  std_logic_vector (23 downto 0);
-        read_ready  : out std_logic;
-        write_ready : out std_logic;
-        rd          : in  std_logic;
-        wrt         : in  std_logic;
+        clock        : in  std_logic;
+        read_req     : in  std_logic;
+        write_req    : in  std_logic;
+        cs           : in  std_logic; --1 enables command queues, 0 disable
+        d_in         : in  std_logic_vector (15 downto 0);
+        d_out        : out std_logic_vector (15 downto 0);
+        addr         : in  std_logic_vector (23 downto 0);
+        read_ready   : out std_logic;
+        write_ready  : out std_logic;
+        rd_from_buff : in  std_logic;
+        wrt_to_buff  : in  std_logic;
 
 
         --SDRAM Interface
@@ -81,11 +81,11 @@ architecture behavioral of sdram is
     constant tras : integer := 42; --row activate to precharge (same bank)
     constant twr  : integer := 12; --write recovery time  
 
-    constant init_startup_timer_default    : integer := 200000 / clockperiodns - 1; --countdown for 200us
-    constant init_pretoset_timer_default   : integer := trp / clockperiodns - 1;
-    constant init_settoref0_timer_default  : integer := tmrd / clockperiodns - 1;
-    constant init_ref0toref1_timer_default : integer := trp / clockperiodns - 1;
-    constant init_ref1toexit_timer_default : integer := trc / clockperiodns - 1;
+    constant init_startup_timer_default    : integer := 200000 / clockperiodns; --countdown for 200us
+    constant init_pretoset_timer_default   : integer := trp / clockperiodns;
+    constant init_settoref0_timer_default  : integer := tmrd / clockperiodns;
+    constant init_ref0toref1_timer_default : integer := trp / clockperiodns;
+    constant init_ref1toexit_timer_default : integer := trc / clockperiodns;
 
     signal init_startup_timer    : integer := init_startup_timer_default;
     signal init_pretoset_timer   : integer := init_pretoset_timer_default;
@@ -97,14 +97,17 @@ architecture behavioral of sdram is
     signal wrt_bnktowrt_timer : integer := bank_activate_delay_default;
     signal rd_bnktord_timer   : integer := bank_activate_delay_default;
 
-    constant rd_timer_default : integer := 508; --509 cycles
+    constant rd_timer_default : integer := 509;
     signal rd_timer : integer := rd_timer_default;
 
-    constant wrt_timer_default : integer := 510; --511 cycles
+    constant wrt_timer_default : integer := 511;
     signal wrt_timer : integer := wrt_timer_default;
 
-    constant refresh_delay_default : integer := trc / clockperiodns - 1;
+    constant refresh_delay_default : integer := trc / clockperiodns;
     signal refresh_reftoidle_timer : integer := refresh_delay_default;
+
+    constant idle_timer_default : integer := 10;
+    signal idle_timer: integer := 10;
     
     type fsm_states is (
         --init
@@ -119,7 +122,7 @@ architecture behavioral of sdram is
         --refresh
         refresh, refresh_wait);
 
-    signal state : fsm_states := init;
+    signal state : fsm_states := init_wait0;
     signal nextstate : fsm_states;
 
     --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
@@ -136,10 +139,10 @@ architecture behavioral of sdram is
     constant cmd_setmode  : std_logic_vector (3 downto 0) := "0000"; --A10 is low
     constant cmd_hltbrst  : std_logic_vector (3 downto 0) := "0110";
 
-    -- A10, udqm, ldqm, ba, cs#, ras#, cas#, we#
-    -- NEED TO FIX DQMS for everything except init state needs to be lows
-    signal sdram_control : std_logic_vector (8 downto 0);
-    constant sdram_control_nop : std_logic_vector (8 downto 0) := '0' & "11" & "00" & cmd_nop;
+    -- A(12 downto 11) & A(9 downto 0), A(10), udqm, ldqm, ba, cs#, ras#, cas#, we#
+    signal sdram_control : std_logic_vector (19 downto 0);
+    constant sdram_control_init_nop : std_logic_vector (8 downto 0) := x"000" & '0' & "11" & "00" & cmd_nop;
+    constant sdram_control_nop : std_logic_vector (8 downto 0) := x"000" & '0' & "00" & "00" & cmd_nop;
     
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
 
@@ -154,17 +157,18 @@ architecture behavioral of sdram is
     attribute iob of iob_we  : signal is "true";
 
     --Holds the current address
-    -- (24 downto 23) => bank
-    -- (22 downto 9) => row address
-    -- (8 downto 0) => column address 
+    -- (24) => write_req
+    -- (23 downto 21) => bank
+    -- (21 downto 9) => row address
+    -- (8 downto 0) => column address
     signal current_address : std_logic_vector (24 downto 0);
     signal req_queue_enqueue : std_logic := '0';
-
     signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
     
     --data fifos
     signal tx_ready, rx_ready : std_logic;
+    signal tx_empty, rx_empty : std_logic;
     signal read_active : std_logic := '0';
     signal write_active : std_logic := '0';
 
@@ -196,7 +200,7 @@ begin
     port map
     (
         clock => clock,
-        enqueue => wrt,
+        enqueue => wrt_to_buff,
         dequeue => write_active,
         d_in => d_in,
         d_out => ram_data_in,
@@ -213,7 +217,7 @@ begin
     (
         clock => clock,
         enqueue => read_active,
-        dequeue => rd,
+        dequeue => rd_from_buff,
         d_in => ram_data_out,
         d_out => d_out,
         empty => rx_empty
@@ -234,6 +238,9 @@ begin
         d_out => current_address,
         empty => req_queue_empty
     );
+    
+    read_ready <= not rx_empty;
+    write_ready <= not tx_empty;
 
     req_queue_enqueue <= read_req or write_req;
 
@@ -255,7 +262,7 @@ begin
                 when init_wait0 =>
                     --A10, dqm, ba, command
                     cke <= '0';
-                    sdram_control <= '0' & "11" & "00" & cmd_deselect;
+                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_deselect;
                     if init_startup_timer > 0 then
                         init_startup_timer <= init_startup_timer - 1;
                     else
@@ -267,11 +274,11 @@ begin
                     cke <= '1';
 
                 when init_precharge =>
-                    sdram_control <= '1' & "11" & "00" & cmd_prechrg;
+                    sdram_control <= x"000" & '1' & "11" & "00" & cmd_prechrg;
                     nextstate <= init_wait2;
 
                 when init_wait2 =>
-                    sdram_control <= sdram_control_nop;
+                    sdram_control <= sdram_control_init_nop;
                     if init_pretoset_timer > 0 then
                         init_pretoset_timer <= init_pretoset_timer - 1;
                     else
@@ -279,11 +286,11 @@ begin
                     end if;
 
                 when init_setmode =>
-                    sdram_control <= '0' & "11" & "00" & cmd_setmode;
+                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_setmode;
                     nextstate <= init_wait4;
 
                 when init_wait3 =>
-                    sdram_control <= sdram_control_nop;
+                    sdram_control <= sdram_control_init_nop;
                     if init_settoref0_timer > 0 then
                         init_settoref0_timer <= init_settoref0_timer - 1;
                     else
@@ -291,11 +298,11 @@ begin
                     end if;
 
                 when init_refresh0 =>
-                    sdram_control <= '0' & "11" & "00" & cmd_refresh;
+                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
                     nextstate <= init_wait4;
 
                 when init_wait4 =>
-                    sdram_control <= sdram_control_nop;
+                    sdram_control <= sdram_control_init_nop;
                     if init_ref0toref1_timer > 0 then
                         init_ref0toref1_timer <= init_ref0toref1_timer - 1;
                     else
@@ -303,11 +310,11 @@ begin
                     end if;
 
                 when init_refresh1 =>
-                    sdram_control <= '0' & "11" & "00" & cmd_refresh;
+                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
                     nextstate <= init_wait5;
 
                 when init_wait5 =>
-                    sdram_control <= sdram_control_nop;
+                    sdram_control <= sdram_control_init_nop;
                     if init_ref1toexit_timer > 0 then
                         init_ref1toexit_timer <= init_ref1toexit_timer - 1;
                     else
@@ -320,14 +327,25 @@ begin
                 when idle =>
                     sdram_control <= sdram_control_nop;
                     nextstate <= idle;
-                    --need actual implementation
+                    if req_queue_empty = '0' then
+                        if current_address(24) = '1' then
+                            nextstate <= wrt_bankact;
+                        else
+                            nextstate <= rd_bankact;
+                        end if;
+                        get_next_request <= '1';
+                        idle_timer <= idle_timer_default;
+                    elsif idle_timer > 0 then
+                        idle_timer <= idle_timer - 1;
+                    end if;
 
                 --------------------------------------------------------
                 -- Read
                 --------------------------------------------------------
                 when rd_bankact =>
-                    --A10, dqm, ba, command
-                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23) & cmd_bnkact;
+                    --cancel request for new instructions
+                    get_next_request <= '0';
+                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
                     nextstate <= rd_wait0;
 
                 when rd_wait0 =>
@@ -340,7 +358,7 @@ begin
                     end if;
 
                 when rd =>
-                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_read;
+                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_read;
                     nextstate <= rd_wait1;
 
                 when rd_wait1 =>
@@ -358,11 +376,11 @@ begin
                     end if;
 
                 when rd_bursthlt =>
-                    sdram_control <= '0' & "11" & "00" & cmd_hltbrst;
+                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
                     nextstate <= rd_precharge;
 
                 when rd_precharge =>
-                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_prechrg;
+                    sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
                     nextstate <= rd_wait4;
 
                 when rd_wait4 =>
@@ -376,8 +394,9 @@ begin
                 -- Write
                 --------------------------------------------------------
                 when wrt_bankact =>
-                    --A10, dqm, ba, command
-                    sdram_control <= current_address(19) & "11" & current_address(24 downto 23) & cmd_bnkact;
+                    --cancel request for new instructions
+                    get_next_request <= '0';
+                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
                     nextstate <= wrt_wait0;
 
                 when wrt_wait0 =>
@@ -390,7 +409,7 @@ begin
                     end if;
 
                 when wrt =>
-                    sdram_control <= '0' & "11" & current_address(24 downto 23) & cmd_write;
+                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_write;
                     nextstate <= wrt_wait1;
 
                 when wrt_wait1 =>
@@ -403,11 +422,11 @@ begin
                     end if;
 
                 when wrt_bursthlt =>
-                    sdram_control <= '0' & "11" & "00" & cmd_hltbrst;
+                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
                     nextstate <= wrt_precharge;
 
                 when wrt_precharge =>
-                    sdram_control <= sdram_control_nop;
+                    sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
                     nextstate <= wrt_wait2;
 
                 when wrt_wait2 =>
@@ -418,9 +437,11 @@ begin
                 -- Refresh
                 --------------------------------------------------------
                 when refresh =>
+                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_refresh;
                     nextstate <= refresh_wait;
 
                 when refresh_wait =>
+                    sdram_control <= sdram_control_nop;
                     if refresh_reftoidle_timer > 0 then
                         refresh_reftoidle_timer <= refresh_reftoidle_timer - 1;
                     else
