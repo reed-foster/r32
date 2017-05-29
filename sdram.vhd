@@ -107,7 +107,7 @@ architecture behavioral of sdram is
     signal refresh_reftoidle_timer : integer := refresh_delay_default;
 
     constant idle_timer_default : integer := 10;
-    signal idle_timer: integer := 10;
+    signal idle_timer: integer := idle_timer_default;
     
     type fsm_states is (
         --init
@@ -140,9 +140,9 @@ architecture behavioral of sdram is
     constant cmd_hltbrst  : std_logic_vector (3 downto 0) := "0110";
 
     -- A(12 downto 11) & A(9 downto 0), A(10), udqm, ldqm, ba, cs#, ras#, cas#, we#
-    signal sdram_control : std_logic_vector (19 downto 0);
-    constant sdram_control_init_nop : std_logic_vector (8 downto 0) := x"000" & '0' & "11" & "00" & cmd_nop;
-    constant sdram_control_nop : std_logic_vector (8 downto 0) := x"000" & '0' & "00" & "00" & cmd_nop;
+    signal sdram_control : std_logic_vector (20 downto 0);
+    constant sdram_control_init_nop : std_logic_vector (20 downto 0) := x"000" & '0' & "11" & "00" & cmd_nop;
+    constant sdram_control_nop : std_logic_vector (20 downto 0) := x"000" & '0' & "00" & "00" & cmd_nop;
     
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
 
@@ -175,7 +175,7 @@ architecture behavioral of sdram is
     component fifo is
     generic
     (
-        depth : integer range 1 to 16 := 8;
+        depth : integer range 1 to 512 := 8;
         bitwidth : integer range 1 to 32 := 32
     );
     port
