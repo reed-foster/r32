@@ -25,3 +25,11 @@ I'm certainly not the first one to design an SDRAM controller in VHDL to run on 
 #### Finite State Machine
 
 At the heart of the SDRAM controller is a Finite State Machine, or FSM. As always, before I started writing VHDL, I created a diagram in order to more easily translate my ideas to code. This is the 2nd (current) revision of the SDRAM state machine used to drive the controller. The green states indicate states in which data is being transferred (read/written) ![SDRAM FSM](sdramfsm2.png)
+There are a lot of different states in this diagram because when I designed it, I wanted the logic for transitioning between states to be very simple and only require a few timers.
+First, the SDRAM is initialized (blue states). The datasheet for the SDRAM chip specifies a 200us startup where all control signals must be held constant. This is achieved by using a counter that counts from 200,000 / Tck to 0 where Tck is the period of the clock (ns). The rest of the delays are implemented the same way.
+The loopback state transitions labeled trp, tmrd, trp, etc. are timing constraints specified in the SDRAM datasheet.
+
+#### FIFOs
+
+Because I don't plan on running my processor at the same frequency as the SDRAM (the CPU core will probably run at 50MHz or 100MHz), I need queues to interface the CPU cache controller with the SDRAM controller. Presently, I am using synchronous FIFO queues with a single clock input so that I can first get the memory controller working. Once the memory controller is complete, I plan on adding asynchronous/dual-frequency FIFOs.
+In addition to buffering data, I also use a small FIFO as a "request" queue. This allows the CPU cache logic to make requests to read or write to SDRAM, even if the SDRAM controller is currently accessing the SDRAM. The CPU cache can request to write data and begin to write data into the transmit FIFO while the SDRAM controller is still busy processing a previous read or write request, and then proceed to manage the cache until it receives an interrupt from the SDRAM controller.
