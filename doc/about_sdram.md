@@ -20,8 +20,8 @@ One of the neat things about SDRAM that allows it to perform very well despite t
 
 #### Other Projects
 
-I'm certainly not the first one to design an SDRAM controller in VHDL to run on an FPGA. As such, there are tons (not that many, but a lot) of SDRAM controllers out there, some of which would probably work on my board with not too much tweaking. However, as I intend to build the whole CPU-core and its peripheral interfaces from scratch, I opted to use others designs purely as reference and learning material. I most heavily relied on Mike Field's two SDRAM controllers (http://hamsterworks.co.nz/mediawiki/index.php/SDRAM_Memory_Controller and http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller), and obviously, the datasheet of the part I am using.
+I'm certainly not the first one to design an SDRAM controller in VHDL to run on an FPGA. As such, there are tons (not that many, but a lot) of SDRAM controllers out there, some of which would probably work on my board with not too much tweaking. However, as I intend to build the whole CPU-core and its peripheral interfaces from scratch, I opted to use others designs purely as reference and learning material. I most heavily relied on Mike Field's two SDRAM controllers ([complex one](http://hamsterworks.co.nz/mediawiki/index.php/SDRAM_Memory_Controller) and [simpler one](http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller)), and obviously, the datasheet of the part I am using.
 
 #### Finite State Machine
 
-At the heart of the SDRAM controller is a Finite State Machine, or FSM. Before I started writing VHDL, I created a diagram in order to more easily ![SDRAM FSM](sdramfsm2.png)
+At the heart of the SDRAM controller is a Finite State Machine, or FSM. As always, before I started writing VHDL, I created a diagram in order to more easily translate my ideas to code. This is the 2nd (current) revision of the SDRAM state machine used to drive the controller. The green states indicate states in which data is being transferred (read/written) ![SDRAM FSM](sdramfsm2.png)
