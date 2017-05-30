@@ -191,6 +191,7 @@ architecture behavioral of sdram is
 
 begin
     
+    --Need to add logic to modify cke if the tx_buffer is empty
     tx_data : fifo
     generic map
     (
