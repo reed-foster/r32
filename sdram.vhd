@@ -365,13 +365,13 @@ begin
                     end if;
 
                 when wrt =>
-                    if not tx_empty then
+                    if tx_empty /= '1' then
                         nextstate <= wrt_wait1;
                     end if;
 
                 when wrt_wait1 =>
                     if wrt_timer > 0 then
-                        if not tx_empty then
+                        if tx_empty /= '1' then
                             wrt_timer <= wrt_timer - 1;
                         end if;
                     else
