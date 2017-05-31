@@ -252,8 +252,8 @@ begin
     iob_ras <= iob_cmd(2);
     iob_cs <= iob_cmd(3);
 
-    -- Should separate fsm transition logic from output logic
-    fsm : process(clock, state)
+    -- Transition Logic
+    fsm_transition : process(clock, state)
     begin
         if rising_edge(clock) then
             nextstate <= state;
@@ -262,61 +262,43 @@ begin
                 -- Initialization
                 --------------------------------------------------------
                 when init_wait0 =>
-                    --A10, dqm, ba, command
-                    cke <= '0';
-                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_deselect;
                     if init_startup_timer > 0 then
                         init_startup_timer <= init_startup_timer - 1;
                     else
                         nextstate <= init_wait1;
                     end if;
 
-                when init_wait1 =>
-                    nextstate <= init_precharge;
-                    cke <= '1';
-
-                when init_precharge =>
-                    sdram_control <= x"000" & '1' & "11" & "00" & cmd_prechrg;
-                    nextstate <= init_wait2;
+                when init_wait1 => nextstate <= init_precharge;
+                when init_precharge => nextstate <= init_wait2;
 
                 when init_wait2 =>
-                    sdram_control <= sdram_control_init_nop;
                     if init_pretoset_timer > 0 then
                         init_pretoset_timer <= init_pretoset_timer - 1;
                     else
                         nextstate <= init_setmode;
                     end if;
 
-                when init_setmode =>
-                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_setmode;
-                    nextstate <= init_wait4;
+                when init_setmode => nextstate <= init_wait4;
 
                 when init_wait3 =>
-                    sdram_control <= sdram_control_init_nop;
                     if init_settoref0_timer > 0 then
                         init_settoref0_timer <= init_settoref0_timer - 1;
                     else
                         nextstate <= init_refresh0;
                     end if;
 
-                when init_refresh0 =>
-                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
-                    nextstate <= init_wait4;
+                when init_refresh0 => nextstate <= init_wait4;
 
                 when init_wait4 =>
-                    sdram_control <= sdram_control_init_nop;
                     if init_ref0toref1_timer > 0 then
                         init_ref0toref1_timer <= init_ref0toref1_timer - 1;
                     else
                         nextstate <= init_refresh1;
                     end if;
 
-                when init_refresh1 =>
-                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
-                    nextstate <= init_wait5;
+                when init_refresh1 => nextstate <= init_wait5;
 
                 when init_wait5 =>
-                    sdram_control <= sdram_control_init_nop;
                     if init_ref1toexit_timer > 0 then
                         init_ref1toexit_timer <= init_ref1toexit_timer - 1;
                     else
@@ -327,7 +309,6 @@ begin
                 -- Idle
                 --------------------------------------------------------
                 when idle =>
-                    sdram_control <= sdram_control_nop;
                     nextstate <= idle;
                     if req_queue_empty = '0' then
                         if current_address(24) = '1' then
@@ -335,7 +316,6 @@ begin
                         else
                             nextstate <= rd_bankact;
                         end if;
-                        get_next_request <= '1';
                         idle_timer <= idle_timer_default;
                     elsif idle_timer > 0 then
                         idle_timer <= idle_timer - 1;
@@ -344,14 +324,9 @@ begin
                 --------------------------------------------------------
                 -- Read
                 --------------------------------------------------------
-                when rd_bankact =>
-                    --cancel request for new instructions
-                    get_next_request <= '0';
-                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
-                    nextstate <= rd_wait0;
+                when rd_bankact => nextstate <= rd_wait0;
 
                 when rd_wait0 =>
-                    sdram_control <= sdram_control_nop;
                     if rd_bnktord_timer > 0 then
                         rd_bnktord_timer <= rd_bnktord_timer - 1;
                     else
@@ -359,14 +334,8 @@ begin
                         nextstate <= rd;
                     end if;
 
-                when rd =>
-                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_read;
-                    nextstate <= rd_wait1;
-
-                when rd_wait1 =>
-                    sdram_control <= sdram_control_nop;
-                    nextstate <= rd_wait2;
-
+                when rd => nextstate <= rd_wait1;
+                when rd_wait1 => nextstate <= rd_wait2;
                 when rd_wait2 => nextstate <= rd_wait3;
 
                 when rd_wait3 =>
@@ -377,32 +346,17 @@ begin
                         nextstate <= rd_bursthlt;
                     end if;
 
-                when rd_bursthlt =>
-                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
-                    nextstate <= rd_precharge;
-
-                when rd_precharge =>
-                    sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
-                    nextstate <= rd_wait4;
-
-                when rd_wait4 =>
-                    sdram_control <= sdram_control_nop;
-                    nextstate <= rd_wait5;
-
-                when rd_wait5 =>
-                    nextstate <= idle;
+                when rd_bursthlt => nextstate <= rd_precharge;
+                when rd_precharge => nextstate <= rd_wait4;
+                when rd_wait4 => nextstate <= rd_wait5;
+                when rd_wait5 => nextstate <= idle;
 
                 --------------------------------------------------------
                 -- Write
                 --------------------------------------------------------
-                when wrt_bankact =>
-                    --cancel request for new instructions
-                    get_next_request <= '0';
-                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
-                    nextstate <= wrt_wait0;
+                when wrt_bankact => nextstate <= wrt_wait0;
 
                 when wrt_wait0 =>
-                    sdram_control <= sdram_control_nop;
                     if wrt_bnktowrt_timer > 0 then
                         wrt_bnktowrt_timer <= wrt_bnktowrt_timer - 1;
                     else
@@ -411,47 +365,30 @@ begin
                     end if;
 
                 when wrt =>
-                    write_active <= '1';
-                    cke <= not tx_empty;
-                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_write;
                     if not tx_empty then
                         nextstate <= wrt_wait1;
                     end if;
 
                 when wrt_wait1 =>
-                    cke <= not tx_empty;
-                    sdram_control <= sdram_control_nop;
                     if wrt_timer > 0 then
                         if not tx_empty then
                             wrt_timer <= wrt_timer - 1;
                         end if;
                     else
-                        write_active <= '0';
                         wrt_timer <= wrt_timer_default;
                         nextstate <= wrt_bursthlt;
                     end if;
 
-                when wrt_bursthlt =>
-                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
-                    nextstate <= wrt_precharge;
-
-                when wrt_precharge =>
-                    sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
-                    nextstate <= wrt_wait2;
-
-                when wrt_wait2 =>
-                    sdram_control <= sdram_control_nop;
-                    nextstate <= idle;
+                when wrt_bursthlt => nextstate <= wrt_precharge;
+                when wrt_precharge => nextstate <= wrt_wait2;
+                when wrt_wait2 => nextstate <= idle;
 
                 --------------------------------------------------------
                 -- Refresh
                 --------------------------------------------------------
-                when refresh =>
-                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_refresh;
-                    nextstate <= refresh_wait;
+                when refresh => nextstate <= refresh_wait;
 
                 when refresh_wait =>
-                    sdram_control <= sdram_control_nop;
                     if refresh_reftoidle_timer > 0 then
                         refresh_reftoidle_timer <= refresh_reftoidle_timer - 1;
                     else
@@ -462,6 +399,91 @@ begin
             end case;
             state <= nextstate;
         end if;
+    end process;
+
+    --Need to go through this and move some of the control signal assignments to the state after which they are assigned
+    fsm_output: process(state)
+    begin
+        case state is
+            --------------------------------------------------------
+                -- Initialization
+                --------------------------------------------------------
+                when init_wait0 =>
+                    cke <= '0';
+                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_deselect;
+
+                when init_wait1 => cke <= '1';
+                when init_precharge => sdram_control <= x"000" & '1' & "11" & "00" & cmd_prechrg;
+                when init_wait2 => sdram_control <= sdram_control_init_nop;
+                when init_setmode => sdram_control <= x"000" & '0' & "11" & "00" & cmd_setmode;
+                when init_wait3 => sdram_control <= sdram_control_init_nop;
+                when init_refresh0 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
+                when init_wait4 => sdram_control <= sdram_control_init_nop;
+                when init_refresh1 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
+                when init_wait5 => sdram_control <= sdram_control_init_nop;
+
+                --------------------------------------------------------
+                -- Idle
+                --------------------------------------------------------
+                when idle =>
+                    sdram_control <= sdram_control_nop;
+                    if req_queue_empty = '0' then
+                        get_next_request <= '1';
+                    end if;
+
+                --------------------------------------------------------
+                -- Read
+                --------------------------------------------------------
+                when rd_bankact =>
+                    get_next_request <= '0';
+                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
+
+                when rd_wait0 => sdram_control <= sdram_control_nop;
+                when rd => sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_read;
+                when rd_wait1 => sdram_control <= sdram_control_nop;
+
+                -- when rd_wait2 => do nothing
+                when rd_wait3 => read_active <= '1';
+                when rd_bursthlt => sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
+                when rd_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
+                when rd_wait4 => sdram_control <= sdram_control_nop;
+                when rd_wait5 => read_active <= '0';
+
+                --------------------------------------------------------
+                -- Write
+                --------------------------------------------------------
+                when wrt_bankact =>
+                    --cancel request for new instructions
+                    get_next_request <= '0';
+                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
+
+                when wrt_wait0 => sdram_control <= sdram_control_nop;
+
+                when wrt =>
+                    write_active <= '1';
+                    --cke <= not tx_empty;
+                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_write;
+
+                when wrt_wait1 =>
+                    --cke <= not tx_empty;
+                    sdram_control <= sdram_control_nop;
+
+                when wrt_bursthlt =>
+                    write_active <= '0';
+                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
+                    nextstate <= wrt_precharge;
+
+                when wrt_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
+
+                when wrt_wait2 => sdram_control <= sdram_control_nop;
+
+                --------------------------------------------------------
+                -- Refresh
+                --------------------------------------------------------
+                when refresh => sdram_control <= x"000" & '0' & "00" & "00" & cmd_refresh;
+                when refresh_wait => sdram_control <= sdram_control_nop;
+
+            end case;
     end process;
 
 end behavioral;
