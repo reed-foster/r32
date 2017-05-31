@@ -25,7 +25,7 @@ entity sdram is
     generic
     (
         clockperiodns : integer := 6; --default of 166MHz
-        burst_length : std_logic_vector := "111" --000, 001, 010, 011, or 111
+        burst_length : std_logic_vector := "111" --000, 001, 010, 011, or 111: 1-, 2-, 4-, 8-, 512-word burst (respectively)
     );
     port
     (
@@ -252,6 +252,7 @@ begin
     iob_ras <= iob_cmd(2);
     iob_cs <= iob_cmd(3);
 
+    -- Should separate fsm transition logic from output logic
     fsm : process(clock, state)
     begin
         if rising_edge(clock) then
@@ -410,14 +411,22 @@ begin
                     end if;
 
                 when wrt =>
+                    write_active <= '1';
+                    cke <= not tx_empty;
                     sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_write;
-                    nextstate <= wrt_wait1;
+                    if not tx_empty then
+                        nextstate <= wrt_wait1;
+                    end if;
 
                 when wrt_wait1 =>
+                    cke <= not tx_empty;
                     sdram_control <= sdram_control_nop;
                     if wrt_timer > 0 then
-                        wrt_timer <= wrt_timer - 1;
+                        if not tx_empty then
+                            wrt_timer <= wrt_timer - 1;
+                        end if;
                     else
+                        write_active <= '0';
                         wrt_timer <= wrt_timer_default;
                         nextstate <= wrt_bursthlt;
                     end if;
