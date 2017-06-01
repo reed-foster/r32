@@ -80,7 +80,8 @@ architecture behavior of sdram_tester is
         we : out  std_logic;
         ram_addr : out  std_logic_vector (12 downto 0);
         ram_data_in : out  std_logic_vector (15 downto 0);
-        ram_data_out : in  std_logic_vector (15 downto 0)
+        ram_data_out : in  std_logic_vector (15 downto 0);
+        ram_data_sel : out std_logic
         );
     end component;
 
@@ -97,6 +98,7 @@ architecture behavior of sdram_tester is
     signal read_ready : std_logic;
     signal write_ready : std_logic;
     signal ram_data_in : std_logic_vector (15 downto 0);
+    signal ram_data_sel : std_logic;
 
     signal wrt_timer : integer := 512;
  
@@ -126,7 +128,8 @@ begin
         we => we,
         ram_addr => ram_addr,
         ram_data_in => ram_data_in,
-        ram_data_out => ram_data_out
+        ram_data_out => ram_data_out,
+        ram_data_sel => ram_data_sel
     );
 
     testfsm : process (clock50, tester)
@@ -170,6 +173,6 @@ begin
         end if;
     end process;
 
-    ram_data <= ram_data_in when write_ready = '1' else (others => 'Z');
+    ram_data <= ram_data_in when ram_data_sel = '1' else (others => 'Z');
     ram_data_out <= ram_data;
 end;

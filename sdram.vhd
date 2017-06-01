@@ -31,16 +31,16 @@ entity sdram is
     (
         --Processor Interface
         clock        : in  std_logic;
-        read_req     : in  std_logic;
-        write_req    : in  std_logic;
+        read_req     : in  std_logic; --issue a new request to read from ram on each rising clock edge
+        write_req    : in  std_logic; --issue a new request to write to ram on each rising clock edge
         cs           : in  std_logic; --1 enables command queues, 0 disable
         d_in         : in  std_logic_vector (15 downto 0);
         d_out        : out std_logic_vector (15 downto 0);
         addr         : in  std_logic_vector (23 downto 0);
-        read_ready   : out std_logic;
-        write_ready  : out std_logic;
-        rd_from_buff : in  std_logic;
-        wrt_to_buff  : in  std_logic;
+        read_ready   : out std_logic; --1 if data is available to read from rx buffer
+        write_ready  : out std_logic; --1 if tx buffer is empty
+        rd_from_buff : in  std_logic; --dequeue from rx buffer
+        wrt_to_buff  : in  std_logic; --enqueue onto tx buffer
 
 
         --SDRAM Interface
@@ -63,7 +63,10 @@ entity sdram is
         --address/data
         ram_addr     : out std_logic_vector (12 downto 0); --address inputs
         ram_data_in  : out std_logic_vector (15 downto 0); --data input
-        ram_data_out : in  std_logic_vector (15 downto 0)  --data output
+        ram_data_out : in  std_logic_vector (15 downto 0); --data output
+
+        --tristate control signal
+        ram_data_sel : out std_logic --1 if ram_data_in should be written to inout, 0 if ram_data_out should be read
    );
 end sdram;
 
@@ -241,7 +244,7 @@ begin
     );
     
     read_ready <= not rx_empty;
-    write_ready <= not tx_empty;
+    write_ready <= tx_empty;
 
     req_queue_enqueue <= read_req or write_req;
 
@@ -263,6 +266,7 @@ begin
     ldqm <= sdram_control(6);
 
     sdram_clk <= clock;
+    ram_data_sel <= not read_active;
 
     -- Transition Logic
     fsm_transition : process(clock, state)
