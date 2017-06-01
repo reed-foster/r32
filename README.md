@@ -1,6 +1,7 @@
 # r32
 32 bit CPU based on the MIPS instruction set
 
+<pre>
 .
 │
 ├── alu - dataflow (alu.vhd)
@@ -14,3 +15,5 @@
 │   ├── rx_data - behavioral (fifo.vhd)
 │   └── req_queue - behavioral (fifo.vhd)
 └── spartan6.ucf
+
+</pre>
