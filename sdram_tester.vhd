@@ -1,137 +1,120 @@
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Company: 
--- Engineer: Reed Foster
+-- Engineer:
+--
+-- Create Date:   21:35:16 05/31/2017
+-- Design Name:   
+-- Module Name:   /home/reed/xilinx_projects/r32/sdram_tester.vhd
+-- Project Name:  r32
+-- Target Device:  
+-- Tool versions:  
+-- Description:   
 -- 
--- Create Date:    11:15:26 04/23/2017 
--- Design Name: 
--- Module Name:    sdram_tester - behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
--- Tests the sdram.vhd interface by writing a few bytes to the AS4C16M16S-6TCN SDRAM
--- and reading them back
--- Dependencies: 
---
--- Revision: 
+-- VHDL Test Bench Created by ISE for module: sdram
+-- 
+-- Dependencies:
+-- 
+-- Revision:
 -- Revision 0.01 - File Created
--- Additional Comments: 
+-- Additional Comments:
 --
-----------------------------------------------------------------------------------
+-- Notes: 
+-- This testbench has been automatically generated using types std_logic and
+-- std_logic_vector for the ports of the unit under test.  Xilinx recommends
+-- that these types always be used for the top-level I/O of a design in order
+-- to guarantee that the testbench will bind correctly to the post-implementation 
+-- simulation model.
+--------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
+ 
 entity sdram_tester is
-    port
-    (
-        --testing interface
-        clock50    : in  std_logic;
-        byte_out   : out std_logic_vector (7 downto 0);
-        byte_out_v : out std_logic;
+port
+(
+    clock50 : in  std_logic;
+    leds    : out std_logic_vector (7 downto 0);
 
-        --SDRAM Interface
-        --clock
-        sdram_clk : out std_logic; --synchronous clock input to SDRAM
-        cke       : out std_logic; --clock enable (HIGH) disable (LOW)
+    udqm : out std_logic;
+    sdram_clk : out std_logic;
+    cke : out std_logic;
+    ba : out std_logic_vector (1 downto 0);
+    sdram_cs : out std_logic;
+    ras : out std_logic;
+    cas : out std_logic;
+    we : out std_logic;
+    ldqm : out std_logic;
+    ram_addr : out std_logic_vector (12 downto 0);
+    ram_data : inout std_logic_vector (15 downto 0)
+);
+end sdram_tester;
 
-        --data I/O mask: controls output buffers in read mode and masks input data in write mode
-        udqm : out std_logic; --byte mask
-        ldqm : out std_logic;
+architecture behavior of sdram_tester is 
+ 
+    -- component declaration for the unit under test (uut)
 
-        --enable/disable signals
-        --control signals: ba0, ba1, cs#, ras#, cas#, and we#
-        ba       : out std_logic_vector (1 downto 0); --bank activate "00" => A, "01" => B, etc.
-        sdram_cs : out std_logic; --enables/disables command decoder
-        ras      : out std_logic; --row address strobe
-        cas      : out std_logic; --column address strobe
-        we       : out std_logic; --write enable
+    type tester_states is (wrt, rd, idle);
 
-        --address/data
-        ram_addr     : out std_logic_vector (12 downto 0); --address inputs
-        ram_data     : inout std_logic_vector (15 downto 0)
-    );
-end entity;
-
-architecture behavioral of sdram_tester is
-
-    constant value : std_logic_vector (15 downto 0) := x"dead";
-    signal buffptr : std_logic_vector (8 downto 0) := "000000000";
-    signal state : std_logic_vector (1 downto 0) := "00"; --0 => init, 1 => write, 2 => read, 3 => stop
-    signal byte_out_tmp : std_logic_vector (15 downto 0) := x"0000";
-    signal byte_out_v_tmp : std_logic := '0';
-
-    signal write_req, read_req : std_logic := '0';
-
-    signal read_ready, write_ready : std_logic := '0';
-
-    signal ram_data_in, ram_data_out : std_logic_vector (15 downto 0) := x"0000";
-
-    --signal d_in_tmp : std_logic_vector (15 downto 0);
-
-    signal clockcounter : integer range 0 to 49999 := 0;
-    signal clock_in : std_logic := '0';
-
-    component sdram is
-    port
-    (
-        --Processor Interface
-        clock       : in  std_logic;
-        read_req    : in  std_logic;
-        cs          : in  std_logic;
-        write_req   : in  std_logic;
-        --d_in        : in  std_logic_vector (15 downto 0);
-        --d_out       : out std_logic_vector (15 downto 0);
-        addr        : in  std_logic_vector (23 downto 0);
-        read_ready  : out std_logic;
-        write_ready : out std_logic;
-        curr_addr   : out std_logic_vector (23 downto 0);
-
-        --SDRAM Interface
-        sdram_clk    : out std_logic; --synchronous clock input to SDRAM
-        cke          : out std_logic; --clock enable (HIGH) disable (LOW)
-        udqm         : out std_logic; --data I/O mask: controls output buffers
-        ldqm         : out std_logic; --in read mode and masks input data in write mode
-        ba           : out std_logic_vector (1 downto 0); --bank activate "00" => A, "01" => B, etc.
-        sdram_cs     : out std_logic; --enables/disables command decoder
-        ras          : out std_logic; --row address strobe
-        cas          : out std_logic; --column address strobe
-        we           : out std_logic; --write enable
-        ram_addr     : out std_logic_vector (12 downto 0) --address inputs
-        --ram_data_in  : in  std_logic_vector (15 downto 0); --data input
-        --ram_data_out : out std_logic_vector (15 downto 0)  --data output
-    );
+    signal tester : tester_states := wrt;
+ 
+    component sdram
+    port(
+        clock : in  std_logic;
+        read_req : in  std_logic;
+        write_req : in  std_logic;
+        cs : in  std_logic;
+        d_in : in  std_logic_vector (15 downto 0);
+        d_out : out  std_logic_vector (15 downto 0);
+        addr : in  std_logic_vector (23 downto 0);
+        read_ready : out  std_logic;
+        write_ready : out  std_logic;
+        rd_from_buff : in  std_logic;
+        wrt_to_buff : in  std_logic;
+        sdram_clk : out  std_logic;
+        cke : out  std_logic;
+        udqm : out  std_logic;
+        ldqm : out  std_logic;
+        ba : out  std_logic_vector(1 downto 0);
+        sdram_cs : out  std_logic;
+        ras : out  std_logic;
+        cas : out  std_logic;
+        we : out  std_logic;
+        ram_addr : out  std_logic_vector (12 downto 0);
+        ram_data_in : out  std_logic_vector (15 downto 0);
+        ram_data_out : in  std_logic_vector (15 downto 0)
+        );
     end component;
 
+
+    --inputs
+    signal read_req : std_logic := '0';
+    signal write_req : std_logic := '0';
+    signal rd_from_buff : std_logic := '0';
+    signal wrt_to_buff : std_logic := '0';
+    signal ram_data_out : std_logic_vector (15 downto 0) := (others => '0');
+
+    --outputs
+    signal d_out : std_logic_vector (15 downto 0);
+    signal read_ready : std_logic;
+    signal write_ready : std_logic;
+    signal ram_data_in : std_logic_vector (15 downto 0);
+
+    signal wrt_timer : integer := 512;
+ 
 begin
 
-    --clock_div : process(clock50)
-    --begin
-    --    if rising_edge(clock50) then
-    --        if clockcounter = 49999 then
-    --            clockcounter <= 0;
-    --            clock_in <= not clock_in;
-    --        else
-    --            clockcounter <= clockcounter + 1;
-    --        end if;
-    --    end if;
-    --end process;
-    clock_in <= clock50;
-
-    ram_data_out <= value;
-    controller : sdram
-    port map
-    (
-        clock => clock_in,
+    uut: sdram
+    port map (
+        clock => clock50,
         read_req => read_req,
         write_req => write_req,
         cs => '1',
-        --d_in => d_in_tmp,
-        --d_out => byte_out_buff,
+        d_in => x"abcd",
+        d_out => d_out,
         addr => x"000000",
         read_ready => read_ready,
         write_ready => write_ready,
-        curr_addr => open,
+        rd_from_buff => rd_from_buff,
+        wrt_to_buff => wrt_to_buff,
         sdram_clk => sdram_clk,
         cke => cke,
         udqm => udqm,
@@ -141,45 +124,52 @@ begin
         ras => ras,
         cas => cas,
         we => we,
-        ram_addr => ram_addr
-        --ram_data_in => ram_data_in,
-        --ram_data_out => ram_data_out
+        ram_addr => ram_addr,
+        ram_data_in => ram_data_in,
+        ram_data_out => ram_data_out
     );
 
-    updatecounters : process(clock_in, read_ready, write_ready, state)
+    testfsm : process (clock50, tester)
     begin
-        if rising_edge(clock_in) then
-            if (state /= "11") then
-                state <= std_logic_vector(unsigned(state) + 1);
-            end if;
+        if rising_edge(clock50) then
+            case tester is
+                when wrt =>
+                    if (wrt_timer > 0) then
+                        wrt_timer <= wrt_timer - 1;
+                    else
+                        tester <= rd;
+                    end if;
+                when rd => tester <= idle;
+                when idle => tester <= idle;
+            end case;
         end if;
     end process;
 
-    setoutput : process(clock_in, byte_out_v_tmp, ram_data_in, read_ready)
+    fsmcomb : process (tester)
     begin
-        if rising_edge(clock_in) then
-            if (read_ready = '1' and byte_out_v_tmp = '0') then
-                byte_out_tmp <= ram_data_in;
-            end if;
+        case tester is
+            when wrt =>
+                if wrt_timer = 512 then
+                    write_req <= '1';
+                else
+                    write_req <= '0';
+                end if;
+                wrt_to_buff <= '1';
+            when rd =>
+                read_req <= '1';
+            when idle =>
+                read_req <= '0';
+                rd_from_buff <= '1';
+        end case;
+    end process;
+
+    latchdata : process (clock50, read_ready)
+    begin
+        if rising_edge(clock50) and read_ready = '1' then
+            leds <= d_out (7 downto 0);
         end if;
     end process;
 
-    setvalid : process (clock_in, read_ready)
-    begin
-        if rising_edge(clock_in) then
-            if (read_ready = '1') then
-                byte_out_v_tmp <= '1';
-            end if;
-        end if;
-    end process;
-
-    write_req <= '1' when state = "01" else '0';
-    read_req <= '1' when state = "10" else '0';
-
-    byte_out_v <= byte_out_v_tmp;
-    byte_out <= byte_out_tmp (7 downto 0);
-
-    ram_data <= ram_data_out when (write_ready = '1') else (15 downto 0 => 'Z');
-    ram_data_in <= ram_data when (read_ready = '1') else x"0000";
-
-end behavioral;
+    ram_data <= ram_data_in when write_ready = '1' else (others => 'Z');
+    ram_data_out <= ram_data;
+end;

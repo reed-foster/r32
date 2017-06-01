@@ -248,9 +248,21 @@ begin
     mode_reg <= "000" & '0' & "00" & std_logic_vector(to_unsigned(CAS_latency, 3)) & '0' & burst_length;
     
     iob_we <= iob_cmd(0);
+    we <= iob_we;
     iob_cas <= iob_cmd(1);
+    cas <= iob_cas;
     iob_ras <= iob_cmd(2);
+    ras <= iob_ras;
     iob_cs <= iob_cmd(3);
+    sdram_cs <= iob_cs;
+
+    ram_addr <= sdram_control(20 downto 19) & sdram_control(8) & sdram_control(18 downto 9);
+    iob_cmd <= sdram_control(3 downto 0);
+    ba <= sdram_control(5 downto 4);
+    udqm <= sdram_control(7);
+    ldqm <= sdram_control(6);
+
+    sdram_clk <= clock;
 
     -- Transition Logic
     fsm_transition : process(clock, state)
@@ -442,7 +454,7 @@ begin
                 when rd => sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_read;
                 when rd_wait1 => sdram_control <= sdram_control_nop;
 
-                -- when rd_wait2 => do nothing
+                when rd_wait2 => sdram_control <= sdram_control_nop;
                 when rd_wait3 => read_active <= '1';
                 when rd_bursthlt => sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
                 when rd_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
@@ -471,7 +483,6 @@ begin
                 when wrt_bursthlt =>
                     write_active <= '0';
                     sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
-                    nextstate <= wrt_precharge;
 
                 when wrt_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
 
