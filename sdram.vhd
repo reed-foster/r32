@@ -24,8 +24,8 @@ use ieee.numeric_std.all;
 entity sdram is
     generic
     (
-        clockperiodns : integer := 6; --default of 166MHz
-        burst_length : std_logic_vector := "111" --000, 001, 010, 011, or 111: 1-, 2-, 4-, 8-, 512-word burst (respectively)
+        clockperiodns : integer range 0 to 31 := 6; --default of 166MHz
+        burst_length : std_logic_vector (2 downto 0) := "111" --000, 001, 010, 011, or 111: 1-, 2-, 4-, 8-, 512-word burst (respectively)
     );
     port
     (
@@ -72,44 +72,44 @@ end sdram;
 
 architecture behavioral of sdram is
 
-    constant CAS_latency : integer := 3;
+    constant CAS_latency : integer range 0 to 3 := 3;
 
     --timing constants (in ns)
-    constant trc  : integer := 60; --row cycle time (same bank)
-    constant trfc : integer := 60; --refresh cycle time
-    constant trcd : integer := 18; --ras# to cas# delay (same bank)
-    constant trp  : integer := 18; --precharge to refresh/row activate (same bank)
-    constant trrd : integer := 12; --row activate to row activate (different bank)
-    constant tmrd : integer := 12; --mode register set
-    constant tras : integer := 42; --row activate to precharge (same bank)
-    constant twr  : integer := 12; --write recovery time  
+    constant trc  : unsigned (5 downto 0) := 60; --row cycle time (same bank)
+    constant trfc : unsigned (5 downto 0) := 60; --refresh cycle time
+    constant trcd : unsigned (4 downto 0) := 18; --ras# to cas# delay (same bank)
+    constant trp  : unsigned (4 downto 0) := 18; --precharge to refresh/row activate (same bank)
+    constant trrd : unsigned (3 downto 0) := 12; --row activate to row activate (different bank)
+    constant tmrd : unsigned (3 downto 0) := 12; --mode register set
+    constant tras : unsigned (5 downto 0) := 42; --row activate to precharge (same bank)
+    constant twr  : unsigned (3 downto 0) := 12; --write recovery time  
 
-    constant init_startup_timer_default    : integer := 200000 / clockperiodns; --countdown for 200us
-    constant init_pretoset_timer_default   : integer := trp / clockperiodns;
-    constant init_settoref0_timer_default  : integer := tmrd / clockperiodns;
-    constant init_ref0toref1_timer_default : integer := trp / clockperiodns;
-    constant init_ref1toexit_timer_default : integer := trc / clockperiodns;
+    constant init_startup_timer_default    : unsigned (15 downto 0) := 200000 / clockperiodns; --countdown for 200us
+    constant init_pretoset_timer_default   : unsigned (1 downto 0)  := trp / clockperiodns; --default = 3
+    constant init_settoref0_timer_default  : unsigned (1 downto 0)  := tmrd / clockperiodns; --default = 2
+    constant init_ref0toref1_timer_default : unsigned (1 downto 0)  := trp / clockperiodns; --default = 3
+    constant init_ref1toexit_timer_default : unsigned (3 downto 0)  := trc / clockperiodns; --default = 10
 
-    signal init_startup_timer    : integer := init_startup_timer_default;
-    signal init_pretoset_timer   : integer := init_pretoset_timer_default;
-    signal init_settoref0_timer  : integer := init_settoref0_timer_default;
-    signal init_ref0toref1_timer : integer := init_ref0toref1_timer_default;
-    signal init_ref1toexit_timer : integer := init_ref1toexit_timer_default;
+    signal init_startup_timer    : integer range 0 to 65535 := init_startup_timer_default;
+    signal init_pretoset_timer   : integer range 0 to 3     := init_pretoset_timer_default;
+    signal init_settoref0_timer  : integer range 0 to 3     := init_settoref0_timer_default;
+    signal init_ref0toref1_timer : integer range 0 to 3     := init_ref0toref1_timer_default;
+    signal init_ref1toexit_timer : integer range 0 to 15    := init_ref1toexit_timer_default;
 
-    constant bank_activate_delay_default : integer := trcd / clockperiodns;
+    constant bank_activate_delay_default : integer range 0 to 3 := trcd / clockperiodns; --default = 3
     signal wrt_bnktowrt_timer : integer := bank_activate_delay_default;
     signal rd_bnktord_timer   : integer := bank_activate_delay_default;
 
-    constant rd_timer_default : integer := 509;
+    constant rd_timer_default : integer range 0 to 511 := 509;
     signal rd_timer : integer := rd_timer_default;
 
-    constant wrt_timer_default : integer := 511;
+    constant wrt_timer_default : integer range 0 to 511 := 511;
     signal wrt_timer : integer := wrt_timer_default;
 
-    constant refresh_delay_default : integer := trc / clockperiodns;
+    constant refresh_delay_default : integer range 0 to 15 := trc / clockperiodns;
     signal refresh_reftoidle_timer : integer := refresh_delay_default;
 
-    constant idle_timer_default : integer := 10;
+    constant idle_timer_default : integer range 0 to 15 := 10;
     signal idle_timer: integer := idle_timer_default;
     
     type fsm_states is (
@@ -148,23 +148,15 @@ architecture behavioral of sdram is
     constant sdram_control_nop : std_logic_vector (20 downto 0) := x"000" & '0' & "00" & "00" & cmd_nop;
     
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
-
-    signal iob_cs : std_logic;
-    signal iob_ras : std_logic;
-    signal iob_cas : std_logic;
-    signal iob_we : std_logic;
-    attribute iob : string;
-    attribute iob of iob_cs  : signal is "true";
-    attribute iob of iob_ras : signal is "true";
-    attribute iob of iob_cas : signal is "true";
-    attribute iob of iob_we  : signal is "true";
+    --attribute iob : string;
+    --attribute iob of iob_cmd : signal is "true";
 
     --Holds the current address
     -- (24) => write_req
     -- (23 downto 21) => bank
     -- (21 downto 9) => row address
     -- (8 downto 0) => column address
-    signal current_address : std_logic_vector (24 downto 0);
+    signal req_out, req_in : std_logic_vector (24 downto 0);
     signal req_queue_enqueue : std_logic := '0';
     signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
@@ -186,6 +178,7 @@ architecture behavioral of sdram is
         clock   : in  std_logic;
         enqueue : in  std_logic;
         dequeue : in  std_logic;
+        enable  : in  std_logic;
         d_in    : in  std_logic_vector (bitwidth - 1 downto 0);
         d_out   : out std_logic_vector (bitwidth - 1 downto 0);
         empty   : out std_logic
@@ -206,6 +199,7 @@ begin
         clock => clock,
         enqueue => wrt_to_buff,
         dequeue => write_active,
+        enable => '1',
         d_in => d_in,
         d_out => ram_data_in,
         empty => tx_empty
@@ -222,6 +216,7 @@ begin
         clock => clock,
         enqueue => read_active,
         dequeue => rd_from_buff,
+        enable => '1',
         d_in => ram_data_out,
         d_out => d_out,
         empty => rx_empty
@@ -238,11 +233,14 @@ begin
         clock => clock,
         enqueue => req_queue_enqueue,
         dequeue => get_next_request,
-        d_in => (write_req & addr),
-        d_out => current_address,
+        enable => cs,
+        d_in => req_in,
+        d_out => req_out,
         empty => req_queue_empty
     );
-    
+
+    req_in <= write_req & addr;
+
     read_ready <= not rx_empty;
     write_ready <= tx_empty;
 
@@ -250,14 +248,10 @@ begin
 
     mode_reg <= "000" & '0' & "00" & std_logic_vector(to_unsigned(CAS_latency, 3)) & '0' & burst_length;
     
-    iob_we <= iob_cmd(0);
-    we <= iob_we;
-    iob_cas <= iob_cmd(1);
-    cas <= iob_cas;
-    iob_ras <= iob_cmd(2);
-    ras <= iob_ras;
-    iob_cs <= iob_cmd(3);
-    sdram_cs <= iob_cs;
+    we <= iob_cmd(0);
+    cas <= iob_cmd(1);
+    ras <= iob_cmd(2);
+    sdram_cs <= iob_cmd(3);
 
     ram_addr <= sdram_control(20 downto 19) & sdram_control(8) & sdram_control(18 downto 9);
     iob_cmd <= sdram_control(3 downto 0);
@@ -327,7 +321,7 @@ begin
                 when idle =>
                     nextstate <= idle;
                     if req_queue_empty = '0' then
-                        if current_address(24) = '1' then
+                        if req_out(24) = '1' then
                             nextstate <= wrt_bankact;
                         else
                             nextstate <= rd_bankact;
@@ -417,88 +411,70 @@ begin
         end if;
     end process;
 
-    --Need to go through this and move some of the control signal assignments to the state after which they are assigned
-    fsm_output: process(state)
+    sdram_control_output : process(state, mode_reg, req_out)
     begin
         case state is
             --------------------------------------------------------
-                -- Initialization
-                --------------------------------------------------------
-                when init_wait0 =>
-                    cke <= '0';
-                    sdram_control <= x"000" & '0' & "11" & "00" & cmd_deselect;
+            -- Initialization
+            --------------------------------------------------------
+            when init_wait0 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_deselect;
+            when init_wait1 => sdram_control <= sdram_control_init_nop;
+            when init_precharge => sdram_control <= x"000" & '1' & "11" & "00" & cmd_prechrg;
+            when init_wait2 => sdram_control <= sdram_control_init_nop;
+            when init_setmode => sdram_control <= mode_reg(12 downto 11) & mode_reg(9 downto 0) & mode_reg(10) & "11" & "00" & cmd_setmode;
+            when init_wait3 => sdram_control <= sdram_control_init_nop;
+            when init_refresh0 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
+            when init_wait4 => sdram_control <= sdram_control_init_nop;
+            when init_refresh1 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
+            when init_wait5 => sdram_control <= sdram_control_init_nop;
 
-                when init_wait1 => cke <= '1';
-                when init_precharge => sdram_control <= x"000" & '1' & "11" & "00" & cmd_prechrg;
-                when init_wait2 => sdram_control <= sdram_control_init_nop;
-                when init_setmode => sdram_control <= x"000" & '0' & "11" & "00" & cmd_setmode;
-                when init_wait3 => sdram_control <= sdram_control_init_nop;
-                when init_refresh0 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
-                when init_wait4 => sdram_control <= sdram_control_init_nop;
-                when init_refresh1 => sdram_control <= x"000" & '0' & "11" & "00" & cmd_refresh;
-                when init_wait5 => sdram_control <= sdram_control_init_nop;
+            --------------------------------------------------------
+            -- Read
+            --------------------------------------------------------
+            when rd_bankact => sdram_control <= req_out(21 downto 20) & req_out(18 downto 9) & req_out(19) & "00" & req_out(23 downto 22) & cmd_bnkact;
+            when rd => sdram_control <= "00" & ('0' & req_out(8 downto 0)) & '0' & "00" & req_out(23 downto 22) & cmd_read;
+            when rd_bursthlt => sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
+            when rd_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
 
-                --------------------------------------------------------
-                -- Idle
-                --------------------------------------------------------
-                when idle =>
-                    sdram_control <= sdram_control_nop;
-                    if req_queue_empty = '0' then
-                        get_next_request <= '1';
-                    end if;
+            --------------------------------------------------------
+            -- Write
+            --------------------------------------------------------
+            when wrt_bankact => sdram_control <= req_out(21 downto 20) & req_out(18 downto 9) & req_out(19) & "00" & req_out(23 downto 22) & cmd_bnkact;
+            when wrt => sdram_control <= "00" & ('0' & req_out(8 downto 0)) & '0' & "00" & req_out(23 downto 22) & cmd_write;
+            when wrt_bursthlt => sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
+            when wrt_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
 
-                --------------------------------------------------------
-                -- Read
-                --------------------------------------------------------
-                when rd_bankact =>
-                    get_next_request <= '0';
-                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
+            --------------------------------------------------------
+            -- Refresh
+            --------------------------------------------------------
+            when refresh => sdram_control <= x"000" & '0' & "00" & "00" & cmd_refresh;
+            when others => sdram_control <= sdram_control_nop;
 
-                when rd_wait0 => sdram_control <= sdram_control_nop;
-                when rd => sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_read;
-                when rd_wait1 => sdram_control <= sdram_control_nop;
-
-                when rd_wait2 => sdram_control <= sdram_control_nop;
-                when rd_wait3 => read_active <= '1';
-                when rd_bursthlt => sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
-                when rd_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
-                when rd_wait4 => sdram_control <= sdram_control_nop;
-                when rd_wait5 => read_active <= '0';
-
-                --------------------------------------------------------
-                -- Write
-                --------------------------------------------------------
-                when wrt_bankact =>
-                    --cancel request for new instructions
-                    get_next_request <= '0';
-                    sdram_control <= current_address(21 downto 20) & current_address(18 downto 9) & current_address(19) & "00" & current_address(23 downto 22) & cmd_bnkact;
-
-                when wrt_wait0 => sdram_control <= sdram_control_nop;
-
-                when wrt =>
-                    write_active <= '1';
-                    --cke <= not tx_empty;
-                    sdram_control <= "00" & ('0' & current_address(8 downto 0)) & '0' & "00" & current_address(23 downto 22) & cmd_write;
-
-                when wrt_wait1 =>
-                    --cke <= not tx_empty;
-                    sdram_control <= sdram_control_nop;
-
-                when wrt_bursthlt =>
-                    write_active <= '0';
-                    sdram_control <= x"000" & '0' & "00" & "00" & cmd_hltbrst;
-
-                when wrt_precharge => sdram_control <= x"000" & '1' & "00" & "00" & cmd_prechrg;
-
-                when wrt_wait2 => sdram_control <= sdram_control_nop;
-
-                --------------------------------------------------------
-                -- Refresh
-                --------------------------------------------------------
-                when refresh => sdram_control <= x"000" & '0' & "00" & "00" & cmd_refresh;
-                when refresh_wait => sdram_control <= sdram_control_nop;
-
-            end case;
+        end case;
     end process;
+
+    rd_active_output : process(state)
+    begin
+        case state is
+            when rd_wait3 => read_active <= '1';
+            when rd_bursthlt => read_active <= '1';
+            when rd_precharge => read_active <= '1';
+            when rd_wait4 => read_active <= '1';
+            when others => read_active <= '0';
+        end case;
+    end process;
+
+    wrt_active_output : process(state)
+    begin
+        case state is
+            when wrt => write_active <= '1';
+            when wrt_wait1 => write_active <= '1';
+            when others => write_active <= '0';
+        end case;
+    end process;
+
+    get_next_request <= '1' when (state = idle and req_queue_empty = '0') else '0';
+
+    cke <= '0' when state = init_wait0 else '1';
 
 end behavioral;
