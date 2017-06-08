@@ -32,6 +32,7 @@ entity fifo is
         clock   : in  std_logic;
         enqueue : in  std_logic;
         dequeue : in  std_logic;
+        enable  : in  std_logic;
         d_in    : in  std_logic_vector (bitwidth - 1 downto 0);
         d_out   : out std_logic_vector (bitwidth - 1 downto 0);
         empty   : out std_logic
@@ -59,20 +60,30 @@ begin
     process (clock, enqueue, dequeue, d_in, full, empty_tmp)
     begin
         if rising_edge(clock) then
-            if enqueue = '1' and full /= '1' then
-                data(write_addr) <= d_in;
-                write_addr <= write_addr + 1;
-                if write_addr >= depth then
-                    write_addr <= 0;
-                    write_ctr_overflowed <= not write_ctr_overflowed;
+            if enable = '1' then
+                if enqueue = '1' and full /= '1' then
+                    data(write_addr) <= d_in;
+                    write_addr <= write_addr + 1;
+                    if write_addr >= depth then
+                        write_addr <= 0;
+                        if write_ctr_overflowed = '1' then
+                            write_ctr_overflowed <= '0';
+                        else
+                            write_ctr_overflowed <= '1';
+                        end if;
+                    end if;
                 end if;
-            end if;
-            if dequeue = '1' and empty_tmp /= '1' then
-                d_out_buff <= data(read_addr);
-                read_addr <= read_addr + 1;
-                if read_addr >= depth then
-                    read_addr <= 0;
-                    read_ctr_overflowed <= not read_ctr_overflowed;
+                if dequeue = '1' and empty_tmp /= '1' then
+                    d_out_buff <= data(read_addr);
+                    read_addr <= read_addr + 1;
+                    if read_addr >= depth then
+                        read_addr <= 0;
+                        if read_ctr_overflowed = '1' then
+                            read_ctr_overflowed <= '0';
+                        else
+                            read_ctr_overflowed <= '1';
+                        end if;
+                    end if;
                 end if;
             end if;
         end if;
