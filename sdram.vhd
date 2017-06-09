@@ -75,42 +75,42 @@ architecture behavioral of sdram is
     constant CAS_latency : integer range 0 to 3 := 3;
 
     --timing constants (in ns)
-    constant trc  : unsigned (5 downto 0) := 60; --row cycle time (same bank)
-    constant trfc : unsigned (5 downto 0) := 60; --refresh cycle time
-    constant trcd : unsigned (4 downto 0) := 18; --ras# to cas# delay (same bank)
-    constant trp  : unsigned (4 downto 0) := 18; --precharge to refresh/row activate (same bank)
-    constant trrd : unsigned (3 downto 0) := 12; --row activate to row activate (different bank)
-    constant tmrd : unsigned (3 downto 0) := 12; --mode register set
-    constant tras : unsigned (5 downto 0) := 42; --row activate to precharge (same bank)
-    constant twr  : unsigned (3 downto 0) := 12; --write recovery time  
+    constant trc  : integer := 60; --row cycle time (same bank)
+    constant trfc : integer := 60; --refresh cycle time
+    constant trcd : integer := 18; --ras# to cas# delay (same bank)
+    constant trp  : integer := 18; --precharge to refresh/row activate (same bank)
+    constant trrd : integer := 12; --row activate to row activate (different bank)
+    constant tmrd : integer := 12; --mode register set
+    constant tras : integer := 42; --row activate to precharge (same bank)
+    constant twr  : integer := 12; --write recovery time  
 
-    constant init_startup_timer_default    : unsigned (15 downto 0) := 200000 / clockperiodns; --countdown for 200us
-    constant init_pretoset_timer_default   : unsigned (1 downto 0)  := trp / clockperiodns; --default = 3
-    constant init_settoref0_timer_default  : unsigned (1 downto 0)  := tmrd / clockperiodns; --default = 2
-    constant init_ref0toref1_timer_default : unsigned (1 downto 0)  := trp / clockperiodns; --default = 3
-    constant init_ref1toexit_timer_default : unsigned (3 downto 0)  := trc / clockperiodns; --default = 10
+    constant init_startup_timer_default    : integer := 200000 / clockperiodns; --countdown for 200us
+    constant init_pretoset_timer_default   : integer := trp / clockperiodns; --default = 3
+    constant init_settoref0_timer_default  : integer := tmrd / clockperiodns; --default = 2
+    constant init_ref0toref1_timer_default : integer := trp / clockperiodns; --default = 3
+    constant init_ref1toexit_timer_default : integer := trc / clockperiodns; --default = 10
 
-    signal init_startup_timer    : integer range 0 to 65535 := init_startup_timer_default;
-    signal init_pretoset_timer   : integer range 0 to 3     := init_pretoset_timer_default;
-    signal init_settoref0_timer  : integer range 0 to 3     := init_settoref0_timer_default;
-    signal init_ref0toref1_timer : integer range 0 to 3     := init_ref0toref1_timer_default;
-    signal init_ref1toexit_timer : integer range 0 to 15    := init_ref1toexit_timer_default;
+    signal init_startup_timer    : unsigned (15 downto 0) := to_unsigned(init_startup_timer_default, 16);
+    signal init_pretoset_timer   : unsigned (1 downto 0)  := to_unsigned(init_pretoset_timer_default, 2);
+    signal init_settoref0_timer  : unsigned (1 downto 0)  := to_unsigned(init_settoref0_timer_default, 2);
+    signal init_ref0toref1_timer : unsigned (1 downto 0)  := to_unsigned(init_ref0toref1_timer_default, 2);
+    signal init_ref1toexit_timer : unsigned (3 downto 0)  := to_unsigned(init_ref1toexit_timer_default, 4);
 
-    constant bank_activate_delay_default : integer range 0 to 3 := trcd / clockperiodns; --default = 3
-    signal wrt_bnktowrt_timer : integer := bank_activate_delay_default;
-    signal rd_bnktord_timer   : integer := bank_activate_delay_default;
+    constant bank_activate_delay_default : integer := trcd / clockperiodns; --default = 3
+    signal wrt_bnktowrt_timer : unsigned (1 downto 0) := to_unsigned(bank_activate_delay_default, 2);
+    signal rd_bnktord_timer   : unsigned (1 downto 0) := to_unsigned(bank_activate_delay_default, 2);
 
-    constant rd_timer_default : integer range 0 to 511 := 509;
-    signal rd_timer : integer := rd_timer_default;
+    constant rd_timer_default : integer := 509;
+    signal rd_timer : unsigned (8 downto 0) := to_unsigned(rd_timer_default, 9);
 
-    constant wrt_timer_default : integer range 0 to 511 := 511;
-    signal wrt_timer : integer := wrt_timer_default;
+    constant wrt_timer_default : integer := 511;
+    signal wrt_timer : unsigned (8 downto 0) := to_unsigned(wrt_timer_default, 9);
 
-    constant refresh_delay_default : integer range 0 to 15 := trc / clockperiodns;
-    signal refresh_reftoidle_timer : integer := refresh_delay_default;
+    constant refresh_delay_default : integer := trc / clockperiodns;
+    signal refresh_reftoidle_timer : unsigned (3 downto 0) := to_unsigned(refresh_delay_default, 4);
 
-    constant idle_timer_default : integer range 0 to 15 := 10;
-    signal idle_timer: integer := idle_timer_default;
+    constant idle_timer_default : integer := 10;
+    signal idle_timer: unsigned (3 downto 0) := to_unsigned(idle_timer_default, 4);
     
     type fsm_states is (
         --init
@@ -326,7 +326,7 @@ begin
                         else
                             nextstate <= rd_bankact;
                         end if;
-                        idle_timer <= idle_timer_default;
+                        idle_timer <= to_unsigned(idle_timer_default, 4);
                     elsif idle_timer > 0 then
                         idle_timer <= idle_timer - 1;
                     end if;
@@ -340,7 +340,7 @@ begin
                     if rd_bnktord_timer > 0 then
                         rd_bnktord_timer <= rd_bnktord_timer - 1;
                     else
-                        rd_bnktord_timer <= bank_activate_delay_default;
+                        rd_bnktord_timer <= to_unsigned(bank_activate_delay_default, 2);
                         nextstate <= rd;
                     end if;
 
@@ -352,7 +352,7 @@ begin
                     if rd_timer > 0 then
                         rd_timer <= rd_timer - 1;
                     else
-                        rd_timer <= rd_timer_default;
+                        rd_timer <= to_unsigned(rd_timer_default, 9);
                         nextstate <= rd_bursthlt;
                     end if;
 
@@ -370,7 +370,7 @@ begin
                     if wrt_bnktowrt_timer > 0 then
                         wrt_bnktowrt_timer <= wrt_bnktowrt_timer - 1;
                     else
-                        wrt_bnktowrt_timer <= bank_activate_delay_default;
+                        wrt_bnktowrt_timer <= to_unsigned(bank_activate_delay_default, 2);
                         nextstate <= wrt;
                     end if;
 
@@ -385,7 +385,7 @@ begin
                             wrt_timer <= wrt_timer - 1;
                         end if;
                     else
-                        wrt_timer <= wrt_timer_default;
+                        wrt_timer <= to_unsigned(wrt_timer_default, 9);
                         nextstate <= wrt_bursthlt;
                     end if;
 
@@ -402,7 +402,7 @@ begin
                     if refresh_reftoidle_timer > 0 then
                         refresh_reftoidle_timer <= refresh_reftoidle_timer - 1;
                     else
-                        refresh_reftoidle_timer <= refresh_delay_default;
+                        refresh_reftoidle_timer <= to_unsigned(refresh_delay_default, 4);
                         nextstate <= idle;
                     end if;
 
