@@ -28,7 +28,7 @@ entity gray is
         enable   : in  std_logic;
         binary   : out std_logic_vector (8 downto 0);
         gray_out : out std_logic_vector (8 downto 0);
-        overflow : out std_logic
+        overflow : out std_logic --latched overflow flag
     );
 end entity;
 
@@ -38,6 +38,8 @@ architecture behavioral of gray is
     signal countnext : unsigned (8 downto 0);
     signal binaryinc : unsigned (8 downto 0);
     signal binarytemp : std_logic_vector (8 downto 0);
+
+    signal overflowtmp : std_logic := '0';
 
 begin
 
@@ -62,7 +64,15 @@ begin
     binarytemp(0) <= binarytemp(1) xor count(0);
 
     binaryinc <= binarytemp + 1;
-    overflow <= binarytemp(0) and binarytemp(1) and binarytemp(2) and binarytemp(3) and binarytemp(4) and binarytemp(5) and binarytemp(6) and binarytemp(7) and binarytemp(8);
+
+    overflow_ff : process (clock, overflowtmp, binarytemp)
+    begin
+        if rising_edge(clock) then
+            overflowtmp <= overflowtmp xor (binarytemp(0) and binarytemp(1) and binarytemp(2) and binarytemp(3) and binarytemp(4) and binarytemp(5) and binarytemp(6) and binarytemp(7) and binarytemp(8));
+        end if;
+    end process;
+    
+    overflow <= overflowtmp;
 
     -- binary to gray conversion
     countnext(8) <= binaryinc(8);
