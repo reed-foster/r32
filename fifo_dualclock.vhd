@@ -33,48 +33,56 @@ entity fifo_dualclock is
         dequeue_clk   : in  std_logic;
         enqueue_en    : in  std_logic;
         dequeue_en    : in  std_logic;
-        d_in          : in  std_logic_vector (bitwidth - 1 downto 0);
-        d_out         : out std_logic_vector (bitwidth - 1 downto 0);
+        d_in          : in  std_logic_vector (15 downto 0);
+        d_out         : out std_logic_vector (15 downto 0);
         empty         : out std_logic
     );
 end entity;
 
 architecture behavioral of fifo_dualclock is
 
-    type queue is array (0 to depth - 1) of std_logic_vector (bitwidth - 1 downto 0);
-    signal data : queue := (0 to depth - 1 => (bitwidth - 1 downto 0 => '0'));
+    type queue is array (0 to 511) of std_logic_vector (15 downto 0);
+    signal data : queue := (0 to 511 => (15 downto 0 => '0'));
 
-    constant counter_width : unsigned := integer(ceil(log2(real(depth))));
-    signal read_ptr, write_ptr : unsigned (counter_width - 1 downto 0) := 0;
+    signal read_ptr, write_ptr : std_logic_vector (8 downto 0);
 
-    signal almostempty, almostfull : std_logic;
+    signal enqueue, dequeue : std_logic := '0';
+    signal full, empty : std_logic;
+
+    component gray
+        port
+        (
+            clock    : in  std_logic;
+            enable   : in  std_logic;
+            binary   : out std_logic_vector (8 downto 0);
+            gray_out : out std_logic_vector (8 downto 0);
+            overflow : out std_logic
+        );
+    end component;
 
 begin
 
-    ------------------
-    -- Enqueue
-    ------------------
+    enqueue_counter : gray
+    port map
+    (
+        clock => enqueue_clk,
+        enable => enqueue,
+        binary =>,
+        gray_out =>,
+        overflow =>
+    );
 
-    enqueue_proc : process(enqueue_en, enqueue_clk)
-    begin
-        if rising_edge(enqueue_clk) then
-            if enqueue_en = '1' then
-                
-            end if;
-        end if;
-    end process;
+    dequeue_counter : gray
+    port map
+    (
+        clock => dequeue_clk,
+        enable => dequeue,
+        binary =>,
+        gray_out =>,
+        overflow =>
+    );
 
-    ------------------
-    -- Dequeue
-    ------------------
-
-    dequeue_proc : process(dequeue_en, dequeue_clk)
-    begin
-        if rising_edge(dequeue_clk) then
-            if dequeue_en = '1' then
-
-            end if;
-        end if;
-    end process;
+    enqueue <= enqueue_en and (not full);
+    dequeue <= dequeue_en and (not empty);
 
 end behavioral;
