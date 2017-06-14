@@ -37,7 +37,7 @@ architecture behavioral of gray is
     signal count : unsigned (8 downto 0) := (8 downto 0 => '0'); --stores temporary value of counter
     signal countnext : unsigned (8 downto 0);
     signal binaryinc : unsigned (8 downto 0);
-    signal binarytemp : std_logic_vector (8 downto 0);
+    signal binarytemp : unsigned (8 downto 0);
 
     signal overflowtmp : std_logic := '0';
 
@@ -71,7 +71,7 @@ begin
             overflowtmp <= overflowtmp xor (binarytemp(0) and binarytemp(1) and binarytemp(2) and binarytemp(3) and binarytemp(4) and binarytemp(5) and binarytemp(6) and binarytemp(7) and binarytemp(8));
         end if;
     end process;
-    
+
     overflow <= overflowtmp;
 
     -- binary to gray conversion
