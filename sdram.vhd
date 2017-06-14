@@ -30,7 +30,9 @@ entity sdram is
     port
     (
         --Processor Interface
-        clock        : in  std_logic;
+        ram_clock    : in  std_logic;
+        read_clock   : in  std_logic;
+        write_clock  : in  std_logic;
         read_req     : in  std_logic; --issue a new request to read from ram on each rising clock edge
         write_req    : in  std_logic; --issue a new request to write to ram on each rising clock edge
         cs           : in  std_logic; --1 enables command queues, 0 disable
@@ -185,38 +187,40 @@ architecture behavioral of sdram is
     );
     end component;
 
+    component fifo_dualclock is
+        port
+        (
+            enqueue_clk   : in  std_logic;
+            dequeue_clk   : in  std_logic;
+            enqueue_en    : in  std_logic;
+            dequeue_en    : in  std_logic;
+            d_in          : in  std_logic_vector (15 downto 0);
+            d_out         : out std_logic_vector (15 downto 0);
+            status        : out std_logic_vector (1 downto 0) --full & empty
+        );
+    end component;
+
 begin
     
-    --Need to add logic to modify cke if the tx_buffer is empty
-    tx_data : fifo
-    generic map
-    (
-        depth => 512,
-        bitwidth => 16
-    )
+    tx_data : fifo_dualclock
     port map
     (
-        clock => clock,
-        enqueue => wrt_to_buff,
-        dequeue => write_active,
-        enable => '1',
+        enqueue_clk => write_clock,
+        dequeue_clk => ram_clock
+        enqueue_en => wrt_to_buff,
+        dequeue_en => write_active,
         d_in => d_in,
         d_out => ram_data_in,
         empty => tx_empty
     );
 
-    rx_data : fifo
-    generic map
-    (
-        depth => 512,
-        bitwidth => 16
-    )
+    rx_data : fifo_dualclock
     port map
     (
-        clock => clock,
-        enqueue => read_active,
-        dequeue => rd_from_buff,
-        enable => '1',
+        enqueue_clk => ram_clock,
+        dequeue_clk => read_clock,
+        enqueue_en => read_active,
+        dequeue_en => rd_from_buff,
         d_in => ram_data_out,
         d_out => d_out,
         empty => rx_empty
@@ -230,7 +234,7 @@ begin
     )
     port map
     (
-        clock => clock,
+        clock => ram_clock,
         enqueue => req_queue_enqueue,
         dequeue => get_next_request,
         enable => cs,
@@ -259,13 +263,13 @@ begin
     udqm <= sdram_control(7);
     ldqm <= sdram_control(6);
 
-    sdram_clk <= clock;
+    sdram_clk <= ram_clock;
     ram_data_sel <= not read_active;
 
     -- Transition Logic
-    fsm_transition : process(clock, state)
+    fsm_transition : process(ram_clock, state)
     begin
-        if rising_edge(clock) then
+        if rising_edge(ram_clock) then
             nextstate <= state;
             case state is
                 --------------------------------------------------------

@@ -25,11 +25,6 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity fifo_dualclock is
-    generic
-    (
-        depth : integer range 1 to 512 := 8; --must be power of 2
-        bitwidth : integer range 1 to 32 := 32
-    );
     port
     (
         enqueue_clk   : in  std_logic;
