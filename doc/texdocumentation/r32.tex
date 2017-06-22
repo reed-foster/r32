@@ -150,7 +150,248 @@ mtc1 & swc1  &      \\
 \newpage
 
 \subsection*{add}
-The add instruction adds two numbers
+
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Add instruction (trap on overflow)
+
+$Reg[rd] \leftarrow Reg[rs] + Reg[rt]$
+
+\subsection*{addi}
+
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+
+Add immediate (trap on overflow)
+
+$Reg[rt] \leftarrow Reg[rs] + sign_extend(imm)$
+
+\subsection*{addiu}
+
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001001} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+
+Add immediate (ignore overflow, note imm is still sign extended)
+
+$Reg[rt] \leftarrow Reg[rs] + sign_extend(imm)$
+
+\subsection*{addu}
+
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100001} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Add instruction (ignore overflow)
+
+$Reg[rd] \leftarrow Reg[rs] + Reg[rt]$
+
+\subsection*{and}
+
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Bitwise logical AND
+
+$Reg[rd] \leftarrow Reg[rs] AND Reg[rt]$
+
+\subsection*{andi}
+
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001100} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+
+Bitwise logical AND with immediate
+
+$Reg[rt] \leftarrow Reg[rs] AND zero\_extend(imm)$
+
+\subsection*{bc1f}
+
+\subsection*{bc1t}
+
+\subsection*{beq}
+
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000100} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+
+Branch if equal
+
+$PC \leftarrow (rs = rt) ? PC + offset : PC + 1$
+
+\subsection*{bgez}
+
+\subsection*{bgtz}
+
+\subsection*{blez}
+
+\subsection*{bltz}
+
+\subsection*{bne}
+
+\subsection*{ceq}
+
+\subsection*{cfc1}
+
+\subsection*{cge}
+
+\subsection*{cgt}
+
+\subsection*{cle}
+
+\subsection*{clt}
+
+\subsection*{cne}
+
+\subsection*{ctc1}
+
+\subsection*{fabs}
+
+\subsection*{fadd}
+
+\subsection*{fdiv}
+
+\subsection*{fma}
+
+\subsection*{fmul}
+
+\subsection*{fneg}
+
+\subsection*{fsqrt}
+
+\subsection*{fsub}
+
+\subsection*{j}
+
+\subsection*{jr}
+
+\subsection*{lb}
+
+\subsection*{lbu}
+
+\subsection*{lh}
+
+\subsection*{lhu}
+
+\subsection*{lui}
+
+\subsection*{lw}
+
+\subsection*{lwc0}
+
+\subsection*{lwc1}
+
+\subsection*{mfc0}
+
+\subsection*{mfc1}
+
+\subsection*{mov}
+
+\subsection*{mtc0}
+
+\subsection*{mtc1}
+
+\subsection*{nor}
+
+\subsection*{or}
+
+\subsection*{ori}
+
+\subsection*{pre}
+
+\subsection*{sh}
+
+\subsection*{sll}
+
+\subsection*{sllv}
+
+\subsection*{slt}
+
+\subsection*{slti}
+
+\subsection*{sltiu}
+
+\subsection*{sltu}
+
+\subsection*{sra}
+
+\subsection*{srav}
+
+\subsection*{srl}
+
+\subsection*{srlv}
+
+\subsection*{sub}
+
+\subsection*{sub}
+
+\subsection*{subu}
+
+\subsection*{sw}
+
+\subsection*{swc0}
+
+\subsection*{swc1}
+
+\subsection*{syscall}
+
+\subsection*{teq}
+
+\subsection*{teqi}
+
+\subsection*{tge}
+
+\subsection*{tgei}
+
+\subsection*{tgeiu}
+
+\subsection*{tgeu}
+
+\subsection*{tlt}
+
+\subsection*{tlti}
+
+\subsection*{tltiu}
+
+\subsection*{tltu}
+
+\subsection*{tne}
+
+\subsection*{tnei}
+
+\subsection*{xor}
+
+\subsection*{xori}
+
+
 
 \section{Memory}
 Memory information
