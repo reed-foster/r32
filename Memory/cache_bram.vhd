@@ -58,8 +58,8 @@ begin
         ram : RAMB16BWER --1K x 18: 16 data + 2 parity (unused)
         generic map --configuration of mode of block ram
         (
-            DATA_WIDTH_A => 18;
-            DOA_REG => 0;
+            DATA_WIDTH_A => 18,
+            DOA_REG => 0,
             RSTTYPE => SYNC
         )
         port map

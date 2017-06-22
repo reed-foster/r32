@@ -35,21 +35,23 @@ entity cache_line is
    );
 end cache_line;
 
-architecture behavioral of cache is
+architecture behavioral of cache_line is
    signal tag  : std_logic_vector(21 downto 0);
-   signal data : array (0 to 1024) of std_logic_vector(7 downto 0);
+   type arrytype is array (0 to 1024) of std_logic_vector(7 downto 0);
+   signal data : arrytype;
    signal empty : std_logic;
    signal wordout : std_logic_vector(31 downto 0);
+   signal hit_tmp : std_logic;
 begin
    
    updatetag : process(clk)
    begin
       if (rising_edge(clk)) then
          if (set_tag = '1') then
-            tag <= address(31 downto 10)
+            tag <= address(31 downto 10);
          end if;
       end if;
-   end updatetag;
+   end process;
 
    --little endian encoding for words/halfwords (lsb stored first)
    wrt_data : process(clk)
@@ -66,17 +68,18 @@ begin
             end if;
          end if;
       end if;
-   end wrt_data;
+   end process;
 
-   hit <= ('1' when (address(31 downto 10) = tag) else '0') and (not empty);
+   hit_tmp <= '1' when (address(31 downto 10) = tag and empty = '0') else '0';
+   hit <= hit_tmp;
 
    --little endian encoding for words/halfwords (lsb stored first)
-   word_out <= (31 downto 8 => mode(0)) & data(to_integer(unsigned(address(9 downto 0)))) when (mode = "000" or mode = "001")
+   wordout <= (31 downto 8 => mode(0)) & data(to_integer(unsigned(address(9 downto 0)))) when (mode = "000" or mode = "001")
          else  (31 downto 16 => mode(0)) & data(to_integer(unsigned(address(9 downto 0))) + 1) & data(to_integer(unsigned(address(9 downto 0)))) when (mode = "010" or mode = "011")
          else  data(to_integer(unsigned(address(9 downto 0))) + 3) & data(to_integer(unsigned(address(9 downto 0))) + 2) & data(to_integer(unsigned(address(9 downto 0))) + 1) & data(to_integer(unsigned(address(9 downto 0)))) when (mode = "100")
          else  (31 downto 0 => '0');
 
-   data_out <= (31 downto 0 => '0') when (not hit) else wordout;
+   data_out <= (31 downto 0 => '0') when hit_tmp = '0' else wordout;
 
 end behavioral;
 

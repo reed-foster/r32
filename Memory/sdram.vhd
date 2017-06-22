@@ -206,7 +206,7 @@ begin
     port map
     (
         enqueue_clk => write_clock,
-        dequeue_clk => ram_clock
+        dequeue_clk => ram_clock,
         enqueue_en => wrt_to_buff,
         dequeue_en => write_active,
         d_in => d_in,
