@@ -1,6 +1,5 @@
-\documentclass{article}
-
-\begin{document}
+% Revision 0.1: removed cne, cgt, and cge (fpcompare equal, greater than, and greater than or equal to)
+%               just use ceq, cle, and clt combined with bc1f to use these operations
 
 \subsection*{add}
 
@@ -189,25 +188,110 @@ PC $\leftarrow$ (rs $\neq$ rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 \subsection*{ceq}
 
+\begin{tabular}[h]{l r l r l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c }{10000} & \multicolumn{2}{| c }{ft} & \multicolumn{2}{| c }{fs} & \multicolumn{2}{| c }{cc} & \multicolumn{2}{| c }{00} & \multicolumn{2}{| c }{11} & \multicolumn{2}{| c |}{0010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
+\end{tabular}
+
+Floating point compare (equal)
+
+CCR[cc] $\leftarrow$ (fs = ft) ? 1 : 0
+
 \subsection*{cfc1}
 
-\subsection*{cge}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c }{00010} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{fs} & \multicolumn{2}{| c |}{00000000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
+\end{tabular}
 
-\subsection*{cgt}
+Move from floating point (note fs must be 0 or 31)
+
+Reg[rt] $\leftarrow$ FCR[fs]
 
 \subsection*{cle}
 
+\begin{tabular}[h]{l r l r l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c }{10000} & \multicolumn{2}{| c }{ft} & \multicolumn{2}{| c }{fs} & \multicolumn{2}{| c }{cc} & \multicolumn{2}{| c }{00} & \multicolumn{2}{| c }{11} & \multicolumn{2}{| c |}{1110} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
+\end{tabular}
+
+Floating point compare (less than or equal to)
+
+CCR[cc] $\leftarrow$ (fs $\leq$ ft) ? 1 : 0
+
 \subsection*{clt}
 
-\subsection*{cne}
+\begin{tabular}[h]{l r l r l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c }{10000} & \multicolumn{2}{| c }{ft} & \multicolumn{2}{| c }{fs} & \multicolumn{2}{| c }{cc} & \multicolumn{2}{| c }{00} & \multicolumn{2}{| c }{11} & \multicolumn{2}{| c |}{1100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
+\end{tabular}
+
+Floating point compare (less than)
+
+CCR[cc] $\leftarrow$ (fs $<$ ft) ? 1 : 0
 
 \subsection*{ctc1}
 
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c }{00110} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{fs} & \multicolumn{2}{| c |}{00000000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
+\end{tabular}
+
+Move from floating point (note fs = 0 or fs = 31 are the only valid arguments for fs)
+
+FCR[fs] $\leftarrow$ Reg[rt]
+
 \subsection*{fabs}
+
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000101} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point absolute value
+
+FReg[fd] $\leftarrow$ $\vert$FReg[fs]$\vert$
 
 \subsection*{fadd}
 
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point add
+
+FReg[fd] $\leftarrow$ FReg[fs] $+$ FReg[ft]
+
 \subsection*{fdiv}
+
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000011} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point add
+
+FReg[fd] $\leftarrow$ FReg[fs] / FReg[ft]
 
 \subsection*{fma}
 
@@ -320,5 +404,3 @@ PC $\leftarrow$ (rs $\neq$ rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
 \subsection*{xor}
 
 \subsection*{xori}
-
-\end{document}

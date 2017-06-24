@@ -3,6 +3,8 @@
 \usepackage{hyperref}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
+\usepackage{mathtools}
+
 \graphicspath{{images/}}
 
 \begin{document}
@@ -44,7 +46,7 @@ The r32 core instruction set is based on MIPS, an instruction set developed MIPS
 
 \subsection{Instruction Format}
 
-Just like MIPS, r32 has three different instruction formats: r-, i-, and j-type instructions. R-type instructions are primarily computational instructions, while i-type instructions are a mix of memory access, branch, and computation instructions, and j-type instructions are used for setting the program counter to a specific value (like an absolute branch rather than a relative one). The opcode of the instruction determines its type/format, as well as what the processor does. Registers rs and rt are source registers for r-type instructions, and rd is the destination register. For loads and stores, rs is used to determine the RAM address, while rt is either the destination or source (for load or store, respectively).
+Just like MIPS, r32 has three different instruction formats: r-, i-, and j-type instructions (and several other formats for floating point instructions, which are based off of r-type instructions). R-type instructions are primarily computational instructions, while i-type instructions are a mix of memory access, branch, and computation instructions, and j-type instructions are used for setting the program counter to a specific value (like an absolute branch rather than a relative one). The opcode of the instruction determines its type/format, as well as what the processor does. Registers rs and rt are source registers for r-type instructions, and rd is the destination register. For loads and stores, rs is used to determine the RAM address, while rt is either the destination or source (for load or store, respectively).
 
 \subsubsection{R-Type Instructions}
 %|opcode|rs|rt|rd|shamt|func|
@@ -146,6 +148,10 @@ mtc1 & swc1  &      \\
 \caption{Supported processor and coprocessor instructions}
 \label{tab:processorinstructions}
 \end{table}
+
+\newpage
+
+\input{instructions.tex}
 
 \newpage
 
