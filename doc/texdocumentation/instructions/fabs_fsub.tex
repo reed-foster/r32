@@ -1,0 +1,130 @@
+\subsection*{fabs}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000101} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point absolute value
+FReg[fd] $\leftarrow$ $\vert$FReg[fs]$\vert$
+
+
+
+
+
+
+\subsection*{fadd}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point add
+FReg[fd] $\leftarrow$ FReg[fs] $+$ FReg[ft]
+
+
+
+
+
+
+\subsection*{fdiv}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000011} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point divide
+FReg[fd] $\leftarrow$ FReg[fs] / FReg[ft]
+
+
+
+
+
+
+\subsection*{fma}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{010111} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point multiply add
+FReg[fd] $\leftarrow$ Freg[fd] $+$ FReg[fs] * FReg[ft]
+
+
+
+
+
+
+\subsection*{fmul}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point multiply
+FReg[fd] $\leftarrow$ FReg[fs] * FReg[ft]
+
+
+
+
+
+
+\subsection*{fneg}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000111} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point negate
+FReg[fd] $\leftarrow$ -FReg[fs]
+
+
+
+
+
+
+\subsection*{fsqrt}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point square root
+FReg[fd] $\leftarrow$ $\sqrt{\textrm{FReg[fs]}}$
+
+
+
+
+
+
+\subsection*{fsub}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{ft} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000001} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Floating point subtract
+FReg[fd] $\leftarrow$ FReg[fs] - FReg[ft]

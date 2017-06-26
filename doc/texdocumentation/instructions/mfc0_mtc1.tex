@@ -1,0 +1,78 @@
+\subsection*{mfc0}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000000} & \multicolumn{2}{| c |}{sel} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 3 & 2 & 0 \\
+\end{tabular}
+\newline
+
+Move from Coprocessor 0
+Reg[rt] $\leftarrow$ CP0Reg[rd, sel]
+
+
+
+
+
+
+\subsection*{mfc1}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c |}{00000000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
+\end{tabular}
+\newline
+
+Move from Coprocessor 1 (Floating point)
+Reg[rt] $\leftarrow$ FReg[fs]
+
+
+
+
+
+
+\subsection*{mov}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{10000} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c}{fd} & \multicolumn{2}{| c |}{000110} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+
+Floating point move
+FReg[fd] $\leftarrow$ FReg[fs]
+
+
+
+
+
+
+\subsection*{mtc0}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010000} & \multicolumn{2}{| c}{00100} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000000} & \multicolumn{2}{| c |}{sel} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 3 & 2 & 0 \\
+\end{tabular}
+\newline
+
+Move to Coprocessor 0
+CP0Reg[rd, sel] $\leftarrow$ Reg[rt]
+
+
+
+
+
+
+\subsection*{mtc1}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{00100} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{fs} & \multicolumn{2}{| c |}{00000000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
+\end{tabular}
+\newline
+
+Move to Coprocessor 1 (Floating point)
+FReg[fs] $\leftarrow$ Reg[rt]

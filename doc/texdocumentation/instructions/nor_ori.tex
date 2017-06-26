@@ -1,0 +1,42 @@
+\subsection*{nor}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100111} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+
+Bitwise logical NOR
+Reg[rd] $\leftarrow$ Reg[rs] NOR Reg[rt]
+
+
+
+
+
+
+\subsection*{or}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100101} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+
+Bitwise logical OR
+Reg[rd] $\leftarrow$ Reg[rs] OR Reg[rt]
+
+
+
+
+
+
+\subsection*{ori}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001101} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+
+Bitwise logical OR with immediate
+Reg[rd] $\leftarrow$ Reg[rs] OR imm$^{\emptyset}$

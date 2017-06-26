@@ -1,0 +1,96 @@
+\subsection*{add}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Add instruction (trap on overflow)
+Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
+
+
+
+
+
+
+\subsection*{addi}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Add immediate (trap on overflow)
+Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
+
+
+
+
+
+
+\subsection*{addiu}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001001} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Add immediate (ignore overflow, note imm is still sign extended)
+Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
+
+
+
+
+
+
+\subsection*{addu}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100001} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Add instruction (ignore overflow)
+Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
+
+
+
+
+
+
+\subsection*{and}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Bitwise logical AND
+Reg[rd] $\leftarrow$ Reg[rs] AND Reg[rt]
+
+
+
+
+
+
+\subsection*{andi}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001100} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Bitwise logical AND with immediate
+Reg[rt] $\leftarrow$ Reg[rs] AND imm$^\emptyset$

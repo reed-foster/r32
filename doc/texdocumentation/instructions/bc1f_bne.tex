@@ -1,0 +1,130 @@
+\subsection*{bc1f}
+\begin{tabular}[h]{l r l r l r c c l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{01000} & \multicolumn{2}{| c}{cc} & \multicolumn{1}{| c }{0} & \multicolumn{1}{| c }{0} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if coprocessor 1 (FPU) false
+PC $\leftarrow$ (cc = 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{bc1t}
+\begin{tabular}[h]{l r l r l r c c l r}
+\hline
+\multicolumn{2}{| c }{010001} & \multicolumn{2}{| c}{01000} & \multicolumn{2}{| c}{cc} & \multicolumn{1}{| c }{0} & \multicolumn{1}{| c }{1} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if coprocessor 1 (FPU) true
+PC $\leftarrow$ (cc = 1) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{beq}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000100} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if equal
+PC $\leftarrow$ (rs = rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{bgez}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{0001} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if greater than or equal to zero
+PC $\leftarrow$ (rs $\geq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{bgtz}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000111} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{0000} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if greater than zero
+PC $\leftarrow$ (rs $>$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{blez}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000110} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{0000} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if less than or equal to zero
+PC $\leftarrow$ (rs $\leq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{bltz}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{0000} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if less than zero
+PC $\leftarrow$ (rs $<$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
+
+
+
+
+
+
+\subsection*{bne}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000101} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Branch if less not equal
+PC $\leftarrow$ (rs $\neq$ rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
