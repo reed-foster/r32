@@ -6,8 +6,8 @@
 31 & 26 & 25 & 0 \\
 \end{tabular}
 \newline
-
 Jump
+\newline
 PC $\leftarrow$ PC (31 downto 28) \& jaddr \& "00"
 
 
@@ -23,8 +23,8 @@ PC $\leftarrow$ PC (31 downto 28) \& jaddr \& "00"
 31 & 26 & 25 & 21 & 20 & 6 & 5 & 0 \\
 \end{tabular}
 \newline
-
 Jump register
+\newline
 PC $\leftarrow$ Reg[rs]
 
 
@@ -40,8 +40,8 @@ PC $\leftarrow$ Reg[rs]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load byte
+\newline
 Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\pm$
 
 
@@ -57,8 +57,8 @@ Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\pm$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load byte unsigned
+\newline
 Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\emptyset$
 
 
@@ -74,8 +74,8 @@ Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\emptyset$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load halfword
+\newline
 Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\pm$
 
 
@@ -91,8 +91,8 @@ Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\pm$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load halfword unsigned
+\newline
 Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\emptyset$
 
 
@@ -108,8 +108,8 @@ Reg[rt] $\leftarrow$ Mem[rs $+$ imm$^\pm$]$^\emptyset$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load upper immediate
+\newline
 Reg[rt] $\leftarrow$ imm \& (15 downto 0 => '0')
 
 
@@ -125,9 +125,9 @@ Reg[rt] $\leftarrow$ imm \& (15 downto 0 => '0')
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load word
-Reg[rt] $\leftarrow$ Mem[base $+$ imm$^\pm$]
+\newline
+Reg[rt] $\leftarrow$ Mem[Reg[base] $+$ imm$^\pm$]
 
 
 
@@ -142,6 +142,6 @@ Reg[rt] $\leftarrow$ Mem[base $+$ imm$^\pm$]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Load word to Coprocessor 1 (FPU)
-FReg[ft] $\leftarrow$ Mem[base $+$ imm$^\pm$]
+\newline
+FReg[ft] $\leftarrow$ Mem[Reg[base] $+$ imm$^\pm$]

@@ -6,8 +6,8 @@
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if coprocessor 1 (FPU) false
+\newline
 PC $\leftarrow$ (cc = 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -23,8 +23,8 @@ PC $\leftarrow$ (cc = 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if coprocessor 1 (FPU) true
+\newline
 PC $\leftarrow$ (cc = 1) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -40,8 +40,8 @@ PC $\leftarrow$ (cc = 1) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if equal
+\newline
 PC $\leftarrow$ (rs = rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -57,8 +57,8 @@ PC $\leftarrow$ (rs = rt) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if greater than or equal to zero
+\newline
 PC $\leftarrow$ (rs $\geq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -74,8 +74,8 @@ PC $\leftarrow$ (rs $\geq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if greater than zero
+\newline
 PC $\leftarrow$ (rs $>$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -91,8 +91,8 @@ PC $\leftarrow$ (rs $>$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if less than or equal to zero
+\newline
 PC $\leftarrow$ (rs $\leq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -108,8 +108,8 @@ PC $\leftarrow$ (rs $\leq$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if less than zero
+\newline
 PC $\leftarrow$ (rs $<$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 
 
@@ -125,6 +125,6 @@ PC $\leftarrow$ (rs $<$ 0) ? PC $+$ offset$^\pm$ : PC $+$ 1
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Branch if less not equal
+\newline
 PC $\leftarrow$ (rs $\neq$ rt) ? PC $+$ offset$^\pm$ : PC $+$ 1

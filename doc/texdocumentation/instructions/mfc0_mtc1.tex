@@ -6,8 +6,8 @@
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 3 & 2 & 0 \\
 \end{tabular}
 \newline
-
 Move from Coprocessor 0
+\newline
 Reg[rt] $\leftarrow$ CP0Reg[rd, sel]
 
 
@@ -23,8 +23,8 @@ Reg[rt] $\leftarrow$ CP0Reg[rd, sel]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
 \end{tabular}
 \newline
-
 Move from Coprocessor 1 (Floating point)
+\newline
 Reg[rt] $\leftarrow$ FReg[fs]
 
 
@@ -56,8 +56,8 @@ FReg[fd] $\leftarrow$ FReg[fs]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 3 & 2 & 0 \\
 \end{tabular}
 \newline
-
 Move to Coprocessor 0
+\newline
 CP0Reg[rd, sel] $\leftarrow$ Reg[rt]
 
 
@@ -73,6 +73,6 @@ CP0Reg[rd, sel] $\leftarrow$ Reg[rt]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
 \end{tabular}
 \newline
-
 Move to Coprocessor 1 (Floating point)
+\newline
 FReg[fs] $\leftarrow$ Reg[rt]

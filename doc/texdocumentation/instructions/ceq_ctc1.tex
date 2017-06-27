@@ -6,8 +6,8 @@
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
 \end{tabular}
 \newline
-
 Floating point compare (equal)
+\newline
 CCR[cc] $\leftarrow$ (fs = ft) ? 1 : 0
 
 
@@ -23,8 +23,8 @@ CCR[cc] $\leftarrow$ (fs = ft) ? 1 : 0
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
 \end{tabular}
 \newline
-
 Move from floating point (note fs must be 0 or 31)
+\newline
 Reg[rt] $\leftarrow$ FCR[fs]
 
 
@@ -40,8 +40,8 @@ Reg[rt] $\leftarrow$ FCR[fs]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
 \end{tabular}
 \newline
-
 Floating point compare (less than or equal to)
+\newline
 CCR[cc] $\leftarrow$ (fs $\leq$ ft) ? 1 : 0
 
 
@@ -57,8 +57,8 @@ CCR[cc] $\leftarrow$ (fs $\leq$ ft) ? 1 : 0
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 8 & 7 & 6 & 5 & 4 & 3 & 0 \\
 \end{tabular}
 \newline
-
 Floating point compare (less than)
+\newline
 CCR[cc] $\leftarrow$ (fs $<$ ft) ? 1 : 0
 
 
@@ -74,6 +74,6 @@ CCR[cc] $\leftarrow$ (fs $<$ ft) ? 1 : 0
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 0 \\
 \end{tabular}
 \newline
-
 Move from floating point (note fs = 0 or fs = 31 are the only valid arguments for fs)
+\newline
 FCR[fs] $\leftarrow$ Reg[rt]

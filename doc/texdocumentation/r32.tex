@@ -101,8 +101,8 @@ blez    & bltz & bne   \\
 j       & jr   & lb    \\
 lbu     & lh   & lhu   \\
 lui     & lw   & nor   \\
-or      & ori  & pre   \\
-sub     & sh   & sll   \\
+or      & ori  & pref  \\
+sb      & sh   & sll   \\
 sllv    & slt  & slti  \\
 sltiu   & sltu & sra   \\
 srav    & srl  & srlv  \\
@@ -122,8 +122,7 @@ tnei    & xor  & xori  \\
 \hline
 \multicolumn{2}{| c |}{CP0} \\
 \hline
-lwc0 & mfc0 \\
-mtc0 & swc0 \\
+mfc0 & mtc0 \\
 \hline
 \end{tabular}
 
@@ -135,8 +134,7 @@ mtc0 & swc0 \\
 \multicolumn{3}{| c |}{CP1 (FPU)} \\
 \hline
 bc1f & bc1t  & ceq  \\
-cfc1 & cge   & cgt  \\
-cle  & clt   & cne  \\
+cfc1 & cle   & clt  \\
 ctc1 & fabs  & fadd \\
 fdiv & fma   & fmul \\
 fneg & fsqrt & fsub \\

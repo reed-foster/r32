@@ -6,8 +6,8 @@
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
 \end{tabular}
 \newline
-
-Add instruction (trap on overflow)
+Add (trap on overflow)
+\newline
 Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
 
 
@@ -23,8 +23,8 @@ Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
-Add immediate (trap on overflow)
+Add with immediate (trap on overflow)
+\newline
 Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
 
 
@@ -40,8 +40,8 @@ Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
-Add immediate (ignore overflow, note imm is still sign extended)
+Add with immediate (ignore overflow, note imm is still sign extended)
+\newline
 Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
 
 
@@ -57,8 +57,8 @@ Reg[rt] $\leftarrow$ Reg[rs] $+$ imm$^\pm$
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
 \end{tabular}
 \newline
-
-Add instruction (ignore overflow)
+Add (ignore overflow)
+\newline
 Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
 
 
@@ -74,8 +74,8 @@ Reg[rd] $\leftarrow$ Reg[rs] $+$ Reg[rt]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
 \end{tabular}
 \newline
-
 Bitwise logical AND
+\newline
 Reg[rd] $\leftarrow$ Reg[rs] AND Reg[rt]
 
 
@@ -91,6 +91,6 @@ Reg[rd] $\leftarrow$ Reg[rs] AND Reg[rt]
 31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
 \end{tabular}
 \newline
-
 Bitwise logical AND with immediate
+\newline
 Reg[rt] $\leftarrow$ Reg[rs] AND imm$^\emptyset$
