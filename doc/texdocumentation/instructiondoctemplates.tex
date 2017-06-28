@@ -1,0 +1,47 @@
+\subsection*{rtype}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{opcode} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{shamt} & \multicolumn{2}{| c |}{func} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Instruction name
+
+Reg[rd] $\leftarrow$ func(Reg[rs], Reg[rt])
+
+
+
+
+
+
+\subsection*{itype}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{opcode} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+
+Instruction name
+
+Reg[rt] $\leftarrow$ func(Reg[rs], imm)
+
+
+
+
+
+\subsection*{trap}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{opcode} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{func} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+
+Instruction name
+
+Reg[rd] $\leftarrow$ func(Reg[rs], Reg[rt])

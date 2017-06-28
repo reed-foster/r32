@@ -1,0 +1,215 @@
+\subsection*{syscall}
+\begin{tabular}[h]{l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{001100} \\
+\hline
+31 & 26 & 25 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+System call
+\newline
+Causes system call exception, tranferring control to exception handler. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{teq}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if equal
+\newline
+Traps if Reg[rs] = Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{teqi}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01100} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if equal with immediate
+\newline
+Traps if Reg[rs] = imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tge}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if greater than or equal to
+\newline
+Traps if Reg[rs] $\geq$ Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tgei}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01000} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if greater than equal to with immediate
+\newline
+Traps if Reg[rs] $\geq$ imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tgeiu}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01001} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if greater than equal to with immediate (unsigned comparison, note imm is still sign-extended)
+\newline
+Traps if Reg[rs] $\geq$ imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tgeu}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110001} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if greater than or equal to (unsigned comparison)
+\newline
+Traps if Reg[rs] $\geq$ Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tlt}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if less than
+\newline
+Traps if Reg[rs] $<$ Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tlti}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01010} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if less than with immediate
+\newline
+Traps if Reg[rs] $<$ imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tltiu}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01011} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if less than with immediate (unsigned comparison, note imm is still sign-extended)
+\newline
+Traps if Reg[rs] $<$ imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tltu}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110011} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if less than (unsigned comparison)
+\newline
+Traps if Reg[rs] $<$ Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tne}
+\begin{tabular}[h]{l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{code} & \multicolumn{2}{| c |}{110110} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Trap if not equal
+\newline
+Traps if Reg[rs] $\neq$ Reg[rt]. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory
+
+
+
+
+
+
+\subsection*{tnei}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000001} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{01110} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Trap if not equal with immediate
+\newline
+Traps if Reg[rs] $\neq$ imm$^\pm$. The \texttt{code} field is ignored by hardware but can be retrieved by the exception handler from the instruction stored in memory

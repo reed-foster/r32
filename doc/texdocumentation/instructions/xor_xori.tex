@@ -1,0 +1,28 @@
+\subsection*{xor}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c}{rd} & \multicolumn{2}{| c}{00000} & \multicolumn{2}{| c |}{100110} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Bitwise logical XOR
+\newline
+Reg[rd] $\leftarrow$ Reg[rs] XOR Reg[rt]
+
+
+
+
+
+
+\subsection*{xori}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001110} & \multicolumn{2}{| c}{rs} & \multicolumn{2}{| c}{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Bitwise logical AND with immediate
+\newline
+Reg[rt] $\leftarrow$ Reg[rs] XOR imm$^\emptyset$

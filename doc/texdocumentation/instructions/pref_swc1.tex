@@ -1,0 +1,282 @@
+\subsection*{pref}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{110011} & \multicolumn{2}{| c }{base} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Prefetch
+\newline
+Transfer data from RAM to cache
+
+
+
+
+
+
+\subsection*{sb}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{101000} & \multicolumn{2}{| c }{base} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Store byte
+\newline
+Mem[Reg[base] $+$ offset$^\pm$] $\leftarrow$ Reg[rt]
+
+
+
+
+
+\subsection*{sh}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{101001} & \multicolumn{2}{| c }{base} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Store halfword
+\newline
+Mem[Reg[base] $+$ offset$^\pm$] $\leftarrow$ Reg[rt]
+
+
+
+
+
+
+\subsection*{sll}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{shamt} & \multicolumn{2}{| c |}{000000} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Logical left shift
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] << shamt
+
+
+
+
+
+
+\subsection*{sllv}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{000100} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Logical left shift (variable)
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] << Reg[rs]
+
+
+
+
+
+
+\subsection*{slt}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{101010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Set if less than (signed comparison)
+\newline
+Reg[rd] $\leftarrow$ Reg[rs] $<$ Reg[rt] ? 1 : 0
+
+
+
+
+
+
+\subsection*{slti}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001011} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Set if less than with immediate (signed comparison)
+\newline
+Reg[rt] $\leftarrow$ Reg[rs] $<$ imm$^\pm$ ? 1 : 0
+
+
+
+
+
+
+\subsection*{sltiu}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{001011} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{imm} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Set if less than with immediate (unsigned comparison, note imm is still sign-extended)
+\newline
+Reg[rt] $\leftarrow$ Reg[rs] $<$ imm$^\pm$ ? 1 : 0
+
+
+
+
+
+
+\subsection*{sltu}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{101010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Set if less than (unsigned comparison)
+\newline
+Reg[rd] $\leftarrow$ Reg[rs] $<$ Reg[rt] ? 1 : 0
+
+
+
+
+
+
+\subsection*{sra}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{shamt} & \multicolumn{2}{| c |}{000011} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Arithmetic right shift
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] >> shamt
+
+
+
+
+
+
+\subsection*{srav}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{000111} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Arithmetic right shift (variable)
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] >> Reg[rs]
+
+
+
+
+
+
+\subsection*{srl}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{shamt} & \multicolumn{2}{| c |}{000010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Logical right shift
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] >>> shamt
+
+
+
+
+
+
+\subsection*{srlv}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{000110} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Logical right shift (variable)
+\newline
+Reg[rd] $\leftarrow$ Reg[rt] >>> Reg[rs]
+
+
+
+
+
+
+\subsection*{sub}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{100010} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Subtract (trap on overflow)
+\newline
+Reg[rd] $\leftarrow$ Reg[rs] - Reg[rt]
+
+
+
+
+
+
+\subsection*{subu}
+\begin{tabular}[h]{l r l r l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{000000} & \multicolumn{2}{| c }{rs} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c }{rd} & \multicolumn{2}{| c }{00000} & \multicolumn{2}{| c |}{100011} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 11 & 10 & 6 & 5 & 0 \\
+\end{tabular}
+\newline
+Subtract (ignore overflow)
+\newline
+Reg[rd] $\leftarrow$ Reg[rs] - Reg[rt]
+
+
+
+
+
+
+\subsection*{sw}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{101011} & \multicolumn{2}{| c }{base} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Store word
+\newline
+Mem[Reg[base] $+$ offset$^\pm$] $\leftarrow$ Reg[rt]
+
+
+
+
+
+
+\subsection*{swc1}
+\begin{tabular}[h]{l r l r l r l r}
+\hline
+\multicolumn{2}{| c }{101011} & \multicolumn{2}{| c }{base} & \multicolumn{2}{| c }{rt} & \multicolumn{2}{| c |}{offset} \\
+\hline
+31 & 26 & 25 & 21 & 20 & 16 & 15 & 0 \\
+\end{tabular}
+\newline
+Store word from Coprocessor 1 (FPU)
+\newline
+Mem[Reg[base] $+$ offset$^\pm$] $\leftarrow$ FReg[ft]

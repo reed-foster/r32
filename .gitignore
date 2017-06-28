@@ -60,7 +60,7 @@ _xmsgs/
 
 # additional files/folders
 isim/
-!netgen/synthesis/*.vhd
+netgen/synthesis/*.nlf
 *.xise
 *.log
 *.cmd
