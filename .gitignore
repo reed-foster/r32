@@ -61,6 +61,7 @@ _xmsgs/
 # additional files/folders
 isim/
 netgen/synthesis/*.nlf
+ipcore_dir/
 *.xise
 *.log
 *.cmd
