@@ -57,3 +57,17 @@ xlnx_auto_0_xdb/
 xst/
 _ngo/
 _xmsgs/
+
+#additional files/folders
+*.xise
+*.log
+*.cmd
+*.ini
+*.xmsgs
+isim/
+*.pyc
+*.aux
+*.out
+*.toc
+*.gz
+*.bak
