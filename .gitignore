@@ -59,12 +59,13 @@ _ngo/
 _xmsgs/
 
 # additional files/folders
+isim/
+!netgen/synthesis/*.vhd
 *.xise
 *.log
 *.cmd
 *.ini
 *.xmsgs
-isim/
 *.pyc
 *.aux
 *.out
