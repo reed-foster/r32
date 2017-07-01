@@ -1,11 +1,16 @@
 import re
 
-opcodes = ["add", "addi", "addiu", "addu", "and", "andi", "beq", "bgez", "bgtz", "blez", "bltz", "bne", "j", "jr", "lb", "lbu", "lh", "lhu", "lui", "lw", "nor", "or", "ori", "pre", "sb", "sh",
-           "sll", "sllv", "slt", "slti", "sltiu", "sra", "srav", "srl", "srlv", "sub", "subu", "sw", "syscall", "teq", "teqi", "tge", "tgei", "tgeiu", "tgeu", "tlt", "tlti", "tltiu", "tltu",
-           "tne", "tnei", "xor", "xori", "lwc0", "swc0", "mtc0", "mfc0", "lwc1", "swc1", "mtc1", "mfc1", "fadd", "fsub", "fmul", "fdiv", "fabs", "fneg", "fsqrt", "bc1f", "bc1t", "ceq",
-           "cne", "clt", "cle", "cge", "cgt", "cfc1", "ctc1", "fma", "mov"]
+opcodes = ["add", "addi", "addiu", "addu", "and", "andi", "bc1f", "bc1t", "beq",
+           "bgez", "bgtz", "blez", "bltz", "bne", "ceq", "cfc1", "cge", "cgt",
+           "cle", "clt", "cne", "ctc1", "fabs", "fadd", "fdiv", "fma", "fmul",
+           "fneg", "fsqrt", "fsub", "j", "jr", "lb", "lbu", "lh", "lhu", "lui",
+           "lw", "lwc0", "lwc1", "mfc0", "mfc1", "mov", "mtc0", "mtc1", "nor",
+           "or", "ori", "pre", "sh", "sll", "sllv", "slt", "slti", "sltiu", "sltu",
+           "sra", "srav", "srl", "srlv", "sub", "sub", "subu", "sw", "swc0", "swc1",
+           "syscall", "teq", "teqi", "tge", "tgei", "tgeiu", "tgeu", "tlt", "tlti",
+           "tltiu", "tltu", "tne", "tnei", "xor", "xor"]
 
-directives = [".text", ".data", ".word", ".half", ".byte", ".space", ".ascii", ".asciiz", ".float", ".globl"]
+directives = [".text", ".data", ".word", ".half", ".byte", ".space", ".fill", ".ascii", ".asciiz", ".float", ".globl"]
 
 def statementtype(asm):
     asm.lstrip()
