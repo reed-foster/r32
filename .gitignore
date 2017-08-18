@@ -73,3 +73,5 @@ ipcore_dir/
 *.toc
 *.gz
 *.bak*
+*.o
+*.cf
