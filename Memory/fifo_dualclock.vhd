@@ -1,20 +1,20 @@
 ----------------------------------------------------------------------------------
--- Company: 
+-- Company:
 -- Engineer: Reed Foster
--- 
--- Create Date:    14:09:00 05/30/2017 
--- Design Name: 
--- Module Name:    fifo_dualclock - behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
--- FIFO with separate read and write clocks
--- Dependencies: 
 --
--- Revision: 
+-- Create Date:    14:09:00 05/30/2017
+-- Design Name:
+-- Module Name:    fifo_dualclock - behavioral
+-- Project Name:
+-- Target Devices:
+-- Tool versions:
+-- Description:
+-- FIFO with separate read and write clocks
+-- Dependencies:
+--
+-- Revision:
 -- Revision 0.01 - File Created
--- Additional Comments: 
+-- Additional Comments:
 --
 ----------------------------------------------------------------------------------
 library ieee;
@@ -112,7 +112,7 @@ begin
     dequeue <= dequeue_en and (not empty);
 
     --block ram
-    RAMB16BWER_inst: RAMB16BWER    
+    RAMB16BWER_inst: RAMB16BWER
     generic map (
         DATA_WIDTH_A => 18,
         DOA_REG => 0,
