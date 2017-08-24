@@ -1,22 +1,6 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: Reed Foster
--- 
--- Create Date:    15:30:18 02/26/2017 
--- Design Name: 
--- Module Name:    sdram - behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
--- SRAM-like interface for AS4C16M16S-6TCN SDRAM
--- Dependencies: 
---
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
-----------------------------------------------------------------------------------
+-- Reed Foster Feb 2017
+-- sdram.vhd - SRAM-like interface for AS4C16M16S-6TCN SDRAM
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -84,7 +68,7 @@ architecture behavioral of sdram is
     constant trrd : integer := 12; --row activate to row activate (different bank)
     constant tmrd : integer := 12; --mode register set
     constant tras : integer := 42; --row activate to precharge (same bank)
-    constant twr  : integer := 12; --write recovery time  
+    constant twr  : integer := 12; --write recovery time
 
     constant init_startup_timer_default    : integer := 200000 / clockperiodns; --countdown for 200us
     constant init_pretoset_timer_default   : integer := trp / clockperiodns; --default = 3
@@ -113,7 +97,7 @@ architecture behavioral of sdram is
 
     constant idle_timer_default : integer := 10;
     signal idle_timer: unsigned (3 downto 0) := to_unsigned(idle_timer_default, 4);
-    
+
     type fsm_states is (
         --init
         init_wait0, init_wait1, init_precharge, init_wait2, init_setmode, init_wait3, init_refresh0,
@@ -132,7 +116,7 @@ architecture behavioral of sdram is
 
     --BurstMode, TestMode, CAS# Latency, Burst Type, Burst Length
     signal mode_reg : std_logic_vector (12 downto 0);
-    
+
     --commands in the form cs#, ras#, cas#, we#
     constant cmd_deselect : std_logic_vector (3 downto 0) := "1111";
     constant cmd_nop      : std_logic_vector (3 downto 0) := "0111";
@@ -148,10 +132,8 @@ architecture behavioral of sdram is
     signal sdram_control : std_logic_vector (20 downto 0);
     constant sdram_control_init_nop : std_logic_vector (20 downto 0) := x"000" & '0' & "11" & "00" & cmd_nop;
     constant sdram_control_nop : std_logic_vector (20 downto 0) := x"000" & '0' & "00" & "00" & cmd_nop;
-    
+
     signal iob_cmd : std_logic_vector (3 downto 0) := cmd_deselect;
-    --attribute iob : string;
-    --attribute iob of iob_cmd : signal is "true";
 
     --Holds the current address
     -- (24) => write_req
@@ -162,7 +144,7 @@ architecture behavioral of sdram is
     signal req_queue_enqueue : std_logic := '0';
     signal get_next_request : std_logic;
     signal req_queue_empty : std_logic;
-    
+
     --data fifos
     signal tx_ready, rx_ready : std_logic;
     signal tx_empty, rx_empty : std_logic;
@@ -201,7 +183,7 @@ architecture behavioral of sdram is
     end component;
 
 begin
-    
+
     tx_data : fifo_dualclock
     port map
     (
@@ -251,7 +233,7 @@ begin
     req_queue_enqueue <= read_req or write_req;
 
     mode_reg <= "000" & '0' & "00" & std_logic_vector(to_unsigned(CAS_latency, 3)) & '0' & burst_length;
-    
+
     we <= iob_cmd(0);
     cas <= iob_cmd(1);
     ras <= iob_cmd(2);
