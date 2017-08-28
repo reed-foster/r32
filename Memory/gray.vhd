@@ -20,7 +20,7 @@ end entity;
 
 architecture behavioral of gray is
 
-    signal binarytemp : unsigned (bitwidth - 1 downto 0);
+    signal binarytemp : std_logic_vector (bitwidth - 1 downto 0);
     signal graytemp : std_logic_vector (bitwidth - 1 downto 0);
 
 begin
@@ -45,4 +45,5 @@ begin
         end generate b2g;
     end generate gen_conv;
 
+    d_out <= binarytemp when mode = "g2b" else graytemp when mode = "b2g" else (bitwidth - 1 downto 0 => '0');
 end behavioral;
