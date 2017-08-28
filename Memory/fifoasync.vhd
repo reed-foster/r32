@@ -24,13 +24,28 @@ end entity;
 
 architecture behavioral of fifoasync is
 
+    constant depth_addrwidth : integer range 1 to 9;
+
     type ramtype is array(0 to depth - 1) of std_logic_vector (bitwidth - 1 downto 0);
     signal mem : ramtype;
 
     signal wrt_en, rd_en : std_logic;
-    signal wrt_addr, rd_addr, wrt_addr_sync, rd_addr_sync : integer range 0 to 511;
-    signal wrt_addr_gray, rd_addr_gray, wrt_addr_gray_sync, rd_addr_gray_sync : std_logic_vector (8 downto 0);
+    signal wrt_addr, rd_addr, wrt_addr_sync, rd_addr_sync : unsigned (depth_addrwidth - 1 downto 0);
+    signal wrt_addr_gray, rd_addr_gray, wrt_addr_gray_sync, rd_addr_gray_sync : std_logic_vector (depth_addrwidth - 1 downto 0);
     signal almost_full, almost_empty : std_logic;
+
+    component gray is
+        generic
+        (
+            mode : string; --"g2b or b2g"
+            bitwidth : integer range 1 to 16
+        );
+        port
+        (
+            d_in  : in  std_logic_vector (bitwidth - 1 downto 0);
+            d_out : out std_logic_vector (bitwidth - 1 downto 0)
+        );
+    end component;
 
 begin
 
@@ -70,7 +85,18 @@ begin
     almost_full <= '1' when unsigned(rd_addr_sync - wrt_addr) < delay else '0';
 
     --binary to gray conversion
-
+    read_b2g : gray
+        generic map (mode => "b2g", bitwidth => depth_addrwidth)
+        port map (d_in => std_logic_vector(rd_addr), d_out => rd_addr_gray);
+    write_b2g : gray
+        generic map (mode => "b2g", bitwidth => depth_addrwidth)
+        port map (d_in => std_logic_vector(wrt_addr), d_out => wrt_addr_gray);
     --gray to binary conversion
+    read_g2b : gray
+        generic map (mode => "g2b", bitwidth => depth_addrwidth)
+        port map (d_in => std_logic_vector(rd_addr_gray_sync), d_out => rd_addr_sync);
+    write_g2b : gray
+        generic map (mode => "g2b", bitwidth => depth_addrwidth)
+        port map (d_in => std_logic_vector(wrt_addr_gray_sync), d_out => wrt_addr_sync);
 
 end architecture;
