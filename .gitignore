@@ -75,3 +75,4 @@ ipcore_dir/
 *.bak*
 *.o
 *.cf
+*.ghw
