@@ -1,3 +1,6 @@
+-- Reed Foster Aug 2017
+-- gray_tb.vhd - A testbench module for binary to gray converter gray.vhd
+
 library ieee;
 use ieee.std_logic_1164.all;
 
