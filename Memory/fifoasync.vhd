@@ -25,18 +25,19 @@ end entity;
 
 architecture behavioral of fifoasync is
 
-    type ramtype is array(0 to depth - 1) of std_logic_vector (bitwidth - 1 downto 0);
+    type ramtype is array (0 to 2**depth_addrwidth - 1) of std_logic_vector (bitwidth - 1 downto 0);
     signal mem : ramtype;
 
     signal wrt_en, rd_en : std_logic;
-    signal wrt_addr, rd_addr, wrt_addr_sync, rd_addr_sync : unsigned (depth_addrwidth - 1 downto 0);
+    signal wrt_addr, rd_addr : unsigned (depth_addrwidth - 1 downto 0) := (depth_addrwidth - 1 downto 0 => '0');
+    signal wrt_addr_sync, rd_addr_sync : std_logic_vector (depth_addrwidth - 1 downto 0);
     signal wrt_addr_gray, rd_addr_gray, wrt_addr_gray_sync, rd_addr_gray_sync : std_logic_vector (depth_addrwidth - 1 downto 0);
     signal almost_full, almost_empty : std_logic;
 
     component gray is
         generic
         (
-            mode : string; --"g2b or b2g"
+            mode : string; --"g2b" or "b2g"
             bitwidth : integer range 1 to 16
         );
         port
@@ -51,18 +52,18 @@ begin
     process (wrt_clock, rd_clock)
     begin
         if rising_edge(wrt_clock) and wrt_en = '1' then
-            mem(wrt_addr) <= d_in;
+            mem(to_integer(wrt_addr)) <= d_in;
             if wrt_addr >= (2 ** depth_addrwidth - 1) then
-                wrt_addr <= 0;
+                wrt_addr <= to_unsigned(0, depth_addrwidth);
             else
-                wrt_addr <= rd_addr + 1;
+                wrt_addr <= wrt_addr + 1;
             end if;
         end if;
 
         if rising_edge(rd_clock) and rd_en = '1' then
-            d_out <= mem(rd_addr);
+            d_out <= mem(to_integer(rd_addr));
             if rd_addr >= (2 ** depth_addrwidth - 1) then
-                rd_addr <= 0;
+                rd_addr <= to_unsigned(0, depth_addrwidth);
             else
                 rd_addr <= rd_addr + 1;
             end if;
@@ -80,8 +81,8 @@ begin
     wrt_en <= enqueue and (not almost_full);
     rd_en <= dequeue and (not almost_empty);
 
-    almost_empty <= '1' when unsigned(wrt_addr_sync - rd_addr) < delay else '0';
-    almost_full <= '1' when unsigned(rd_addr_sync - wrt_addr) < delay else '0';
+    almost_empty <= '1' when (unsigned(wrt_addr_sync) - rd_addr) < delay else '0';
+    almost_full <= '1' when (unsigned(rd_addr_sync) - wrt_addr) < delay and almost_empty /= '1' else '0';
 
     --binary to gray conversion
     read_b2g : gray
