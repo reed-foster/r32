@@ -9,6 +9,7 @@ entity fifoasync is
     generic
     (
         bitwidth : integer range 1 to 32 := 32;
+        depth_addrwidth : integer range 1 to 9 := 3;
         delay : integer range 2 to 5 := 2
     );
     port
@@ -23,8 +24,6 @@ entity fifoasync is
 end entity;
 
 architecture behavioral of fifoasync is
-
-    constant depth_addrwidth : integer range 1 to 9;
 
     type ramtype is array(0 to depth - 1) of std_logic_vector (bitwidth - 1 downto 0);
     signal mem : ramtype;
@@ -53,7 +52,7 @@ begin
     begin
         if rising_edge(wrt_clock) and wrt_en = '1' then
             mem(wrt_addr) <= d_in;
-            if wrt_addr >= 511 then
+            if wrt_addr >= (2 ** depth_addrwidth - 1) then
                 wrt_addr <= 0;
             else
                 wrt_addr <= rd_addr + 1;
@@ -62,7 +61,7 @@ begin
 
         if rising_edge(rd_clock) and rd_en = '1' then
             d_out <= mem(rd_addr);
-            if rd_addr >= 511 then
+            if rd_addr >= (2 ** depth_addrwidth - 1) then
                 rd_addr <= 0;
             else
                 rd_addr <= rd_addr + 1;
