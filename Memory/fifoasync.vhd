@@ -14,12 +14,14 @@ entity fifoasync is
     );
     port
     (
-        wrt_clock   : in  std_logic;
-        rd_clock    : in  std_logic;
-        enqueue     : in  std_logic;
-        dequeue     : in  std_logic;
-        d_in        : in  std_logic_vector(bitwidth - 1 downto 0);
-        d_out       : out std_logic_vector(bitwidth - 1 downto 0)
+        wrt_clock       : in  std_logic;
+        rd_clock        : in  std_logic;
+        enqueue         : in  std_logic;
+        dequeue         : in  std_logic;
+        d_in            : in  std_logic_vector(bitwidth - 1 downto 0);
+        d_out           : out std_logic_vector(bitwidth - 1 downto 0);
+        almost_empty    : out std_logic;
+        almost_full     : out std_logic
     );
 end entity;
 
@@ -32,7 +34,7 @@ architecture behavioral of fifoasync is
     signal wrt_addr, rd_addr : unsigned (depth_addrwidth - 1 downto 0) := (depth_addrwidth - 1 downto 0 => '0');
     signal wrt_addr_sync, rd_addr_sync : std_logic_vector (depth_addrwidth - 1 downto 0);
     signal wrt_addr_gray, rd_addr_gray, wrt_addr_gray_sync, rd_addr_gray_sync : std_logic_vector (depth_addrwidth - 1 downto 0);
-    signal almost_full, almost_empty : std_logic;
+    signal almost_full_tmp, almost_empty_tmp : std_logic;
 
     component gray is
         generic
@@ -78,11 +80,14 @@ begin
         end if;
     end process;
 
-    wrt_en <= enqueue and (not almost_full);
-    rd_en <= dequeue and (not almost_empty);
+    wrt_en <= enqueue and (not almost_full_tmp);
+    rd_en <= dequeue and (not almost_empty_tmp);
 
-    almost_empty <= '1' when (unsigned(wrt_addr_sync) - rd_addr) < delay else '0';
-    almost_full <= '1' when (unsigned(rd_addr_sync) - wrt_addr) < delay and almost_empty /= '1' else '0';
+    almost_empty_tmp <= '1' when (unsigned(wrt_addr_sync) - rd_addr) < delay else '0';
+    almost_full_tmp <= '1' when (unsigned(rd_addr_sync) - wrt_addr) < delay and almost_empty_tmp /= '1' else '0';
+
+    almost_empty <= almost_empty_tmp;
+    almost_full <= almost_full_tmp;
 
     --binary to gray conversion
     read_b2g : gray

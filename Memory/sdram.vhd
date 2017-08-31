@@ -147,7 +147,7 @@ architecture behavioral of sdram is
 
     --data fifos
     signal tx_ready, rx_ready : std_logic;
-    signal tx_empty, rx_empty : std_logic;
+    signal tx_empty, rx_empty, tx_full, rx_full : std_logic;
     signal read_active : std_logic := '0';
     signal write_active : std_logic := '0';
 
@@ -169,43 +169,52 @@ architecture behavioral of sdram is
     );
     end component;
 
-    component fifo_dualclock is
+    component fifoasync is
+        generic
+        (
+            bitwidth : integer range 1 to 32 := 32;
+            depth_addrwidth : integer range 1 to 9 := 3;
+            delay : integer range 2 to 5 := 2
+        );
         port
         (
-            enqueue_clk   : in  std_logic;
-            dequeue_clk   : in  std_logic;
-            enqueue_en    : in  std_logic;
-            dequeue_en    : in  std_logic;
-            d_in          : in  std_logic_vector (15 downto 0);
-            d_out         : out std_logic_vector (15 downto 0);
-            status        : out std_logic_vector (1 downto 0) --full & empty
+            wrt_clock       : in  std_logic;
+            rd_clock        : in  std_logic;
+            enqueue         : in  std_logic;
+            dequeue         : in  std_logic;
+            d_in            : in  std_logic_vector(bitwidth - 1 downto 0);
+            d_out           : out std_logic_vector(bitwidth - 1 downto 0);
+            almost_empty    : out std_logic;
+            almost_full     : out std_logic
         );
     end component;
 
 begin
 
-    tx_data : fifo_dualclock
+    tx_data : fifoasync
     port map
     (
-        enqueue_clk => write_clock,
-        dequeue_clk => ram_clock,
-        enqueue_en => wrt_to_buff,
-        dequeue_en => write_active,
+        wrt_clock => write_clock,
+        rd_clock => ram_clock,
+        enqueue => wrt_to_buff,
+        dequeue => write_active,
         d_in => d_in,
         d_out => ram_data_in,
-        empty => tx_empty
+        almost_empty => tx_empty,
+        almost_full => tx_full --should never be full
     );
 
-    rx_data : fifo_dualclock
+    rx_data : fifoasync
     port map
     (
-        enqueue_clk => ram_clock,
-        dequeue_clk => read_clock,
-        enqueue_en => read_active,
-        dequeue_en => rd_from_buff,
+        wrt_clock => ram_clock,
+        rd_clock => read_clock,
+        enqueue => read_active,
+        dequeue => rd_from_buff,
         d_in => ram_data_out,
         d_out => d_out,
-        empty => rx_empty
+        almost_empty => rx_empty,
+        almost_full => rx_full --should never be full
     );
 
     req_queue : fifo
@@ -397,7 +406,7 @@ begin
         end if;
     end process;
 
-    sdram_control_output : process(state, mode_reg, req_out)
+    sdram_control_output : process(state)
     begin
         case state is
             --------------------------------------------------------
