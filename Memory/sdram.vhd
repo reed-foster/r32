@@ -324,6 +324,9 @@ begin
                         idle_timer <= to_unsigned(idle_timer_default, 4);
                     elsif idle_timer > 0 then
                         idle_timer <= idle_timer - 1;
+                    elsif idle_timer = 0 then
+                        nextstate <= refresh;
+                        idle_timer <= to_unsigned(idle_timer_default, 4);
                     end if;
 
                 --------------------------------------------------------
@@ -366,7 +369,7 @@ begin
                         wrt_bnktowrt_timer <= wrt_bnktowrt_timer - 1;
                     else
                         wrt_bnktowrt_timer <= to_unsigned(bank_activate_delay_default, 2);
-                        nextstate <= wrt;
+                        nextstate <= wrt; --may want to idle for longer so that write queue can start to fill
                     end if;
 
                 when wrt =>
